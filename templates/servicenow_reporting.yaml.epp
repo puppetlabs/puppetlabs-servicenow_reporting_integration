@@ -1,0 +1,9 @@
+<%- | String $instance,
+      String $user,
+      String $password,
+| -%>
+# managed by Puppet
+---
+instance: <%= $instance %>
+user: <%= $user %>
+password: <%= $password %>
