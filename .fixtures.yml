@@ -3,4 +3,6 @@
 ---
 fixtures:
   forge_modules:
-#     stdlib: "puppetlabs/stdlib"
+    inifile:
+      repo: "puppetlabs/inifile"
+      ref: "4.2.0"

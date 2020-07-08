@@ -2,11 +2,16 @@
   "name": "puppetlabs-servicenow_reporting_integration",
   "version": "0.1.0",
   "author": "Puppet, Inc.",
-  "summary": "",
-  "license": "proprietary",
-  "source": "",
+  "summary": "A module that allows Puppet to create a ServiceNow incident from an interesting Puppet report",
+  "license": "Apache-2.0",
+  "source": "http://github.com/puppetlabs/puppetlabs-servicenow_reporting_integration",
+  "project_page": "http://github.com/puppetlabs/puppetlabs-servicenow_reporting_integration",
+  "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_reporting_integration/issues",
   "dependencies": [
-
+    {
+      "name": "puppetlabs/inifile",
+      "version_requirement": ">= 4.2.0 <= 4.3.0"
+    }
   ],
   "operatingsystem_support": [
     {
