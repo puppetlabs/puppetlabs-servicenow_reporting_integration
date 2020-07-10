@@ -3,11 +3,11 @@
 # @example
 #   include servicenow_reporting_integration
 # @param [String] instance
-#   The FQDN of the ServiceNow instance to query
+#   The FQDN of the ServiceNow instance
 # @param [String] user
-#   The username of the account with permission to query data
+#   The username of the account
 # @param [String] password
-#   The password of the account used to query data from Servicenow
+#   The password of the account
 class servicenow_reporting_integration (
   String $instance,
   String $user,
