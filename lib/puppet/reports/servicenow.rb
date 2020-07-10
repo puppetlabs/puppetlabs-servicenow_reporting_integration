@@ -30,11 +30,11 @@ Puppet::Reports.register_report(:servicenow) do
     response = do_snow_request(endpoint,
                                'Post',
                                incident_data,
-                               settings_hash['user'],
-                               settings_hash['password'],
-                               settings_hash['oauth_token'])
+                               user: settings_hash['user'],
+                               password: settings_hash['password'],
+                               oauth_token: settings_hash['oauth_token'])
 
-    raise "Incident creation failed. Error from #{endpoint} (status: #{reponse.code}): #{response.body}" if reponse.code.to_i >= 400
+    raise "Incident creation failed. Error from #{endpoint} (status: #{response.code}): #{response.body}" if response.code.to_i >= 400
     return true
   rescue StandardError => e
     Puppet.err "Could not send incident to Servicenow: #{e}\n#{e.backtrace}"
