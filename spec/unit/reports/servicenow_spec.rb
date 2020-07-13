@@ -88,6 +88,20 @@ describe 'ServiceNow report processor' do
     end
   end
 
+  context 'receiving response code greater than 200' do
+    it 'returns the response code from Servicenow' do
+      allow(processor).to receive(:status).and_return 'changed'
+      allow(processor).to receive(:time).and_return '00:00:00'
+      allow(processor).to receive(:host).and_return 'host'
+      allow(processor).to receive(:job_id).and_return '1'
+
+      [300, 400, 500].each do |response_code|
+        allow(processor).to receive(:do_snow_request).and_return(new_mock_response(response_code, { 'sys_id' => 'foo_sys_id' }.to_json))
+        expect { processor.process }.to raise_error(RuntimeError, %r{(status: #{response_code})})
+      end
+    end
+  end
+
   context 'loading ServiceNow config' do
     shared_context 'setup hiera-eyaml' do
       before(:each) do
