@@ -25,7 +25,7 @@ Puppet::Reports.register_report(:servicenow) do
       assigned_to: settings_hash['assigned_to'],
     }
 
-    endpoint = "https://#{settings_hash['snow_instance']}/api/now/table/incident"
+    endpoint = "https://#{settings_hash['instance']}/api/now/table/incident"
 
     response = do_snow_request(endpoint,
                                'Post',

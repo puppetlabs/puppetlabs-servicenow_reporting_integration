@@ -78,3 +78,50 @@ end
 module LitmusHelpers
   extend PuppetLitmus
 end
+
+module IncidentHelpers
+  def get_incidents(query)
+    params = {
+      'table' => 'incident',
+      'url_params' => {
+        'sysparm_query' => query,
+        'sysparm_display_value' => true,
+      },
+    }
+
+    task_result = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', params)
+    task_result.result['result']
+  end
+  module_function :get_incidents
+
+  def get_single_incident(query)
+    snow_err_msg_prefix = "On ServiceNow instance #{servicenow_instance.uri} with query #{query}"
+
+    incidents = IncidentHelpers.get_incidents(query)
+    raise "#{snow_err_msg_prefix} expected incident matching query but none was found" if incidents.empty?
+    if incidents.length > 1
+      sys_ids = incidents.map { |incident| incident['sys_id'] }
+      raise "#{snow_err_msg_prefix}: found multiple matching incidents. sys_ids: #{sys_ids.join(', ')}"
+    end
+
+    incidents[0]
+  end
+  module_function :get_single_incident
+
+  def delete_incident(sys_id)
+    params = {
+      'table' => 'incident',
+      'sys_id' => sys_id,
+    }
+
+    servicenow_instance.run_bolt_task('servicenow_tasks::delete_record', params)
+  end
+  module_function :delete_incident
+
+  def delete_incidents(query)
+    get_incidents(query).each do |incident|
+      delete_incident(incident['sys_id'])
+    end
+  end
+  module_function :delete_incidents
+end
