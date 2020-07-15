@@ -2,8 +2,14 @@
 
 require './spec/support/acceptance/helpers.rb'
 
-RSpec.configure do |_|
+RSpec.configure do |config|
   include TargetHelpers
+
+  config.before(:suite) do
+    # Stop the puppet service on the master to avoid edge-case conflicting
+    # Puppet runs (one triggered by service vs one we trigger)
+    master.run_shell('puppet resource service puppet ensure=stopped')
+  end
 end
 
 # TODO: This will cause some problems if we run the tests

@@ -13,8 +13,7 @@ class MockServiceNowInstance < Sinatra::Base
 
   # Initialize the tables
   set :tables,
-      'cmdb_ci' => {},
-      'cmdb_ci_acc' => {}
+      'incident' => {}
 
   # Configure https
   set :server_settings,
