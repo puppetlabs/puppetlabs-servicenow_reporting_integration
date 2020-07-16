@@ -7,9 +7,16 @@ def new_mock_response(status, body)
   response
 end
 
-def expect_created_incident(credentials = {})
+def expect_created_incident(expected_incident, expected_credentials = {})
   # do_snow_request will only be called to create an incident
-  expect(processor).to receive(:do_snow_request)
-    .with(anything, anything, anything, hash_including(credentials))
-    .and_return(new_mock_response(200, { 'sys_id' => 'foo_sys_id' }.to_json))
+  expect(processor).to receive(:do_snow_request) do |_, _, actual_incident, actual_credentials|
+    expect(actual_incident).to include(short_description: match(expected_incident[:short_description]))
+    expect(actual_credentials).to include(expected_credentials)
+
+    new_mock_response(200, { 'sys_id' => 'foo_sys_id' }.to_json)
+  end
+end
+
+def short_description_regex(status)
+  Regexp.new("Puppet.*#{processor.time}.*#{Regexp.escape(status)}.*#{processor.host}")
 end
