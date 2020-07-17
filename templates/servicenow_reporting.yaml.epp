@@ -1,9 +1,11 @@
 <%- | String $instance,
       String $user,
       String $password,
+      String $pe_console_url,
 | -%>
 # managed by Puppet
 ---
 instance: <%= $instance %>
 user: <%= $user %>
 password: <%= $password %>
+pe_console_url: <%= $pe_console_url %>

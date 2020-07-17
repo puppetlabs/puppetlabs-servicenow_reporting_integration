@@ -16,7 +16,7 @@ describe 'ServiceNow report processor' do
   end
 
   let(:settings_hash) do
-    { 'pe_console'       => 'test_console',
+    { 'pe_console_url'   => 'test_console',
       'caller'           => 'test_caller',
       'category'         => '1',
       'contact_type'     => '1',

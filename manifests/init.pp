@@ -8,10 +8,13 @@
 #   The username of the account
 # @param [String] password
 #   The password of the account
+# @param [String] pe_console_url
+#   The PE console url
 class servicenow_reporting_integration (
   String $instance,
   String $user,
   String $password,
+  String $pe_console_url,
 ) {
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the report processor
@@ -24,9 +27,10 @@ class servicenow_reporting_integration (
       group   => 'pe-puppet',
       mode    => '0640',
       content => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
-        instance => $instance,
-        user     => $user,
-        password => $password,
+        instance       => $instance,
+        user           => $user,
+        password       => $password,
+        pe_console_url => $pe_console_url,
       }),
     }
   ])
