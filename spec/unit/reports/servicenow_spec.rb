@@ -9,6 +9,9 @@ describe 'ServiceNow report processor' do
   let(:processor) do
     processor = Puppet::Transaction::Report.new('apply')
     processor.extend(Puppet::Reports.report(:servicenow))
+    allow(processor).to receive(:time).and_return '00:00:00'
+    allow(processor).to receive(:host).and_return 'host'
+    allow(processor).to receive(:job_id).and_return '1'
     processor
   end
 
@@ -22,10 +25,16 @@ describe 'ServiceNow report processor' do
       'urgency'          => '1',
       'assignment_group' => '1',
       'assigned_to'      => '1',
-      'snow_instance'    => 'fake.service-now.com',
+      'instance'         => 'test_instance',
       'user'             => 'test_user',
       'password'         => 'test_password',
       'oauth_token'      => 'test_token' }
+  end
+  let(:expected_credentials) do
+    {
+      user: 'test_user',
+      password: 'test_password',
+    }
   end
 
   before(:each) do
@@ -57,10 +66,10 @@ describe 'ServiceNow report processor' do
       it 'creates incident' do
         allow(processor).to receive(:status).and_return 'unchanged'
         allow(processor).to receive(:noop_pending).and_return true
-        allow(processor).to receive(:time).and_return '00:00:00'
-        allow(processor).to receive(:host).and_return 'host'
-        allow(processor).to receive(:job_id).and_return '1'
-        expect_created_incident(user: 'test_user', password: 'test_password')
+        expected_incident = {
+          short_description: short_description_regex('pending changes'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
         processor.process
       end
     end
@@ -69,10 +78,10 @@ describe 'ServiceNow report processor' do
   context 'with report status: changed' do
     it 'creates incident' do
       allow(processor).to receive(:status).and_return 'changed'
-      allow(processor).to receive(:time).and_return '00:00:00'
-      allow(processor).to receive(:host).and_return 'host'
-      allow(processor).to receive(:job_id).and_return '1'
-      expect_created_incident(user: 'test_user', password: 'test_password')
+      expected_incident = {
+        short_description: short_description_regex('changed'),
+      }
+      expect_created_incident(expected_incident, expected_credentials)
       processor.process
     end
   end
@@ -80,10 +89,10 @@ describe 'ServiceNow report processor' do
   context 'with report status: failed' do
     it 'creates incident' do
       allow(processor).to receive(:status).and_return 'failed'
-      allow(processor).to receive(:time).and_return '00:00:00'
-      allow(processor).to receive(:host).and_return 'host'
-      allow(processor).to receive(:job_id).and_return '1'
-      expect_created_incident(user: 'test_user', password: 'test_password')
+      expected_incident = {
+        short_description: short_description_regex('failed'),
+      }
+      expect_created_incident(expected_incident, expected_credentials)
       processor.process
     end
   end
@@ -91,9 +100,6 @@ describe 'ServiceNow report processor' do
   context 'receiving response code greater than 200' do
     it 'returns the response code from Servicenow' do
       allow(processor).to receive(:status).and_return 'changed'
-      allow(processor).to receive(:time).and_return '00:00:00'
-      allow(processor).to receive(:host).and_return 'host'
-      allow(processor).to receive(:job_id).and_return '1'
 
       [300, 400, 500].each do |response_code|
         allow(processor).to receive(:do_snow_request).and_return(new_mock_response(response_code, { 'sys_id' => 'foo_sys_id' }.to_json))
@@ -107,7 +113,6 @@ describe 'ServiceNow report processor' do
       before(:each) do
         # Choose an arbitrary incident-creation status
         allow(processor).to receive(:status).and_return 'failed'
-        allow(processor).to receive(:time).and_return '00:00:00'
 
         hiera_eyaml_config = {
           pkcs7_private_key: File.absolute_path('./spec/support/common/hiera-eyaml/private_key.pkcs7.pem'),
@@ -152,7 +157,10 @@ describe 'ServiceNow report processor' do
         end
 
         it 'decrypts the password' do
-          expect_created_incident(user: 'test_user', password: 'test_password')
+          expected_incident = {
+            short_description: short_description_regex('failed'),
+          }
+          expect_created_incident(expected_incident, expected_credentials)
           processor.process
         end
       end
@@ -163,7 +171,10 @@ describe 'ServiceNow report processor' do
         end
 
         it 'decrypts the password' do
-          expect_created_incident(user: 'test_user', password: 'test_password')
+          expected_incident = {
+            short_description: short_description_regex('failed'),
+          }
+          expect_created_incident(expected_incident, expected_credentials)
           processor.process
         end
       end
