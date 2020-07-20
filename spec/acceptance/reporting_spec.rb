@@ -8,6 +8,7 @@ describe 'ServiceNow reporting' do
       instance: servicenow_instance.uri,
       user: servicenow_config['user'],
       password: servicenow_config['password'],
+      pe_console_url: "https://#{master.uri}",
     }
   end
   let(:setup_manifest) do
@@ -78,12 +79,7 @@ describe 'ServiceNow reporting' do
       end
 
       include_context 'incident creation test setup'
-
-      it 'creates an incident' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0])
-        incident = IncidentHelpers.get_single_incident(query)
-        expect(incident['short_description']).to match(%r{pending changes})
-      end
+      include_examples 'incident creation test', 'noop_pending'
     end
   end
 
@@ -93,12 +89,7 @@ describe 'ServiceNow reporting' do
     end
 
     include_context 'incident creation test setup'
-
-    it 'creates an incident' do
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
-      incident = IncidentHelpers.get_single_incident(query)
-      expect(incident['short_description']).to match(%r{changed})
-    end
+    include_examples 'incident creation test', 'changed'
   end
 
   context 'with report status: failed' do
@@ -107,12 +98,7 @@ describe 'ServiceNow reporting' do
     end
 
     include_context 'incident creation test setup'
-
-    it 'creates an incident' do
-      trigger_puppet_run(master, acceptable_exit_codes: [1, 4, 6])
-      incident = IncidentHelpers.get_single_incident(query)
-      expect(incident['short_description']).to match(%r{failed})
-    end
+    include_examples 'incident creation test', 'failed'
   end
 
   context 'user specifies a hiera-eyaml encrypted password' do
@@ -128,11 +114,6 @@ describe 'ServiceNow reporting' do
     end
 
     include_context 'incident creation test setup'
-
-    it 'still works' do
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
-      incident = IncidentHelpers.get_single_incident(query)
-      expect(incident['short_description']).to match(%r{changed})
-    end
+    include_examples 'incident creation test', 'changed'
   end
 end

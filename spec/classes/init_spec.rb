@@ -12,9 +12,10 @@ describe 'servicenow_reporting_integration' do
 
   let(:params) do
     {
-      'instance' => 'foo_instance',
-      'user' => 'foo_user',
-      'password' => 'foo_password',
+      'instance'       => 'foo_instance',
+      'user'           => 'foo_user',
+      'password'       => 'foo_password',
+      'pe_console_url' => 'foo_pe_console_url',
     }
   end
 

@@ -1,6 +1,7 @@
 # rubocop:disable Style/AccessorMethodName
 
 require './spec/support/acceptance/helpers.rb'
+require './spec/support/acceptance/shared_examples.rb'
 
 RSpec.configure do |config|
   include TargetHelpers
