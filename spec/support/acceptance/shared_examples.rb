@@ -15,5 +15,9 @@ RSpec.shared_examples 'incident creation test' do |report_status|
     incident = IncidentHelpers.get_single_incident(query)
     expect(incident['short_description']).to match(expected_short_description)
     expect(incident['description']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(incident['caller_id']).to eql(kaller['sys_id'])
+    if respond_to?(:additional_incident_assertions)
+      additional_incident_assertions.call(incident)
+    end
   end
 end

@@ -2,6 +2,16 @@
       String $user,
       String $password,
       String $pe_console_url,
+      String $caller_id,
+      Optional[String] $category,
+      Optional[String] $subcategory,
+      Optional[String] $contact_type,
+      Optional[Integer] $state,
+      Optional[Integer] $impact,
+      Optional[Integer] $urgency,
+      Optional[String] $assignment_group,
+      Optional[String] $assigned_to,
+
 | -%>
 # managed by Puppet
 ---
@@ -9,3 +19,12 @@ instance: <%= $instance %>
 user: <%= $user %>
 password: <%= $password %>
 pe_console_url: <%= $pe_console_url %>
+caller_id: <%= $caller_id %>
+category: <%= $category %>
+subcategory: <%= $subcategory %>
+contact_type: <%= $contact_type %>
+state: <%= $state %>
+impact: <%= $impact %>
+urgency: <%= $urgency %>
+assignment_group: <%= $assignment_group %>
+assigned_to: <%= $assigned_to %>

@@ -85,7 +85,7 @@ module IncidentHelpers
       'table' => 'incident',
       'url_params' => {
         'sysparm_query' => query,
-        'sysparm_display_value' => true,
+        'sysparm_exclude_reference_link' => true,
       },
     }
 
@@ -95,7 +95,7 @@ module IncidentHelpers
   module_function :get_incidents
 
   def get_single_incident(query)
-    snow_err_msg_prefix = "On ServiceNow instance #{servicenow_instance.uri} with query #{query}"
+    snow_err_msg_prefix = "On ServiceNow instance #{servicenow_instance.uri} with query '#{query}'"
 
     incidents = IncidentHelpers.get_incidents(query)
     raise "#{snow_err_msg_prefix} expected incident matching query but none was found" if incidents.empty?

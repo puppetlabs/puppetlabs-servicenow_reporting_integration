@@ -18,8 +18,9 @@ Puppet::Reports.register_report(:servicenow) do
       # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
       # best and most stable solution we can do (for now) is the description you see here.
       description: "See PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}",
-      caller: settings_hash['caller'],
+      caller_id: settings_hash['caller_id'],
       category: settings_hash['category'],
+      subcategory: settings_hash['subcategory'],
       contact_type: settings_hash['contact_type'],
       state: settings_hash['state'],
       impact: settings_hash['impact'],
