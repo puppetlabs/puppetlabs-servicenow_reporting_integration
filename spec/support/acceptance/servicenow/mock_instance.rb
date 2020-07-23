@@ -8,17 +8,37 @@ require 'base64'
 # Our mock ServiceNow instance is a Sinatra server that mimics
 # the relevant ServiceNow API endpoints used by the tests
 class MockServiceNowInstance < Sinatra::Base
-  set :bind, '0.0.0.0'
-  set :port, 1080
+  configure do
+    set :bind, '0.0.0.0'
+    set :port, 1080
 
-  # Initialize the tables
-  set :tables,
-      'incident' => {}
+    # Configure https
+    set :server_settings,
+        SSLEnable: true,
+        SSLCertName: [['CN', 'Sinatra']]
 
-  # Configure https
-  set :server_settings,
-      SSLEnable: true,
-      SSLCertName: [['CN', 'Sinatra']]
+    # Initialize the tables
+    user_table = {}
+    user_grmember_table = {}
+    2.times do |_|
+      user_sys_id = SecureRandom.uuid.delete('-')
+      user_table[user_sys_id] = {
+        'sys_id' => user_sys_id,
+      }
+
+      user_grmember_sys_id = SecureRandom.uuid.delete('-')
+      user_grmember_table[user_grmember_sys_id] = {
+        'sys_id' => user_grmember_sys_id,
+        'user'   => user_sys_id,
+        'group'  => SecureRandom.uuid.delete('-'),
+      }
+    end
+
+    set :tables,
+        'incident'          => {},
+        'sys_user'          => user_table,
+        'sys_user_grmember' => user_grmember_table
+  end
 
   before do
     content_type 'application/json'
