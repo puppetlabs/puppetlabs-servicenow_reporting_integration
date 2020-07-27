@@ -23,7 +23,14 @@ def set_sitepp_content(manifest)
   }
   HERE
 
-  master.run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
+  write_file(master, '/etc/puppetlabs/code/environments/production/manifests/site.pp', content)
+end
+
+def write_file(target, dest, content)
+  # Litmus doesn't have a 'write_file' helper so we write our own
+  # by taking advtange of create_manifest_file
+  path = target.create_manifest_file(content)
+  target.run_shell("mv #{path} #{dest}")
 end
 
 def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])

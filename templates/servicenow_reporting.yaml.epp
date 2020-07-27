@@ -11,7 +11,9 @@
       Optional[Integer] $urgency,
       Optional[String] $assignment_group,
       Optional[String] $assigned_to,
-
+      # Extra variables that _aren't_ part of the servicenow_reporting_integration
+      # class' parameters go here
+      String $report_processor_checksum,
 | -%>
 # managed by Puppet
 ---
@@ -28,3 +30,4 @@ impact: <%= $impact %>
 urgency: <%= $urgency %>
 assignment_group: <%= $assignment_group %>
 assigned_to: <%= $assigned_to %>
+report_processor_checksum: <%= $report_processor_checksum %>
