@@ -1,4 +1,5 @@
 require 'spec_helper_acceptance'
+require 'securerandom'
 # rubocop:disable Metrics/LineLength
 
 describe 'ServiceNow reporting' do
@@ -206,6 +207,49 @@ describe 'ServiceNow reporting' do
           expect(incident['assignment_group']).to eql(ug_pair['group'])
           expect(incident['assigned_to']).to eql(ug_pair['user'])
         }
+      end
+    end
+  end
+
+  context 'when the report processor changes between module versions' do
+    # In this test, we'll replace the module's report processor with a 'stub'
+    # report processor that creates a 'report_processed' file. We'll then
+    # trigger a puppet run and afterwards assert that our 'report_processed'
+    # file was created.
+    let(:created_file_path) do
+      basename = File.basename(Tempfile.new('report_processed'))
+      "/tmp/#{basename}"
+    end
+    let(:report_processor_implementation) do
+      <<-CODE
+      Puppet::Reports.register_report(:servicenow) do
+        def process
+          Puppet::FileSystem.touch("#{created_file_path}")
+        end
+      end
+      CODE
+    end
+    let(:reports_dir) do
+      '/etc/puppetlabs/code/environments/production/modules/servicenow_reporting_integration/lib/puppet/reports'
+    end
+
+    before(:each) do
+      master.run_shell("rm -f #{created_file_path}")
+      master.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
+      write_file(master, "#{reports_dir}/servicenow.rb", report_processor_implementation)
+    end
+    after(:each) do
+      master.run_shell("rm -f #{created_file_path}")
+      master.run_shell("mv #{reports_dir}/servicenow_current.rb #{reports_dir}/servicenow.rb")
+    end
+
+    it 'picks up those changes' do
+      master.apply_manifest(setup_manifest, catch_failures: true)
+      trigger_puppet_run(master, acceptable_exit_codes: [0])
+      begin
+        master.run_shell("ls #{created_file_path}")
+      rescue => e
+        raise "failed to assert that #{created_file_path} was created: #{e}"
       end
     end
   end
