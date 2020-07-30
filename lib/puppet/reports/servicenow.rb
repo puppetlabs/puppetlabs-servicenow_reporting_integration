@@ -6,12 +6,23 @@ Puppet::Reports.register_report(:servicenow) do
   include Puppet::Util::Servicenow
 
   def process
-    unless status != 'unchanged' || noop_pending
+    decision_parameters = "status: #{status}, "\
+                          "corrective_change: #{corrective_change}, "\
+                          "noop_pending: #{noop_pending}"
+    Puppet.info(sn_log_entry("report attributes parameters: #{decision_parameters}"))
+
+    settings_hash = settings
+    incident_creation_conditions = settings_hash['incident_creation_conditions']
+
+    Puppet.info(sn_log_entry("user selected attributes: #{incident_creation_conditions}"))
+
+    unless create_incident?(status, corrective_change, noop_pending, incident_creation_conditions)
+      Puppet.info(sn_log_entry('decision: Do not create incident'))
       # do not create an incident
       return false
     end
-    settings_hash = settings
-    short_description_status = (status == 'unchanged') ? 'pending changes' : status
+
+    short_description_status = noop_pending ? 'pending changes' : status
     incident_data = {
       short_description: "Puppet run report #{time} (status: #{short_description_status}) for node #{host}",
       # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
@@ -31,6 +42,8 @@ Puppet::Reports.register_report(:servicenow) do
 
     endpoint = "https://#{settings_hash['instance']}/api/now/table/incident"
 
+    Puppet.info(sn_log_entry("attempting to create incident on #{endpoint}"))
+
     response = do_snow_request(endpoint,
                                'Post',
                                incident_data,
@@ -39,6 +52,11 @@ Puppet::Reports.register_report(:servicenow) do
                                oauth_token: settings_hash['oauth_token'])
 
     raise "Incident creation failed. Error from #{endpoint} (status: #{response.code}): #{response.body}" if response.code.to_i >= 300
+
+    response_data = JSON.parse(response.body)['result']
+
+    Puppet.info(sn_log_entry("created incident #{response_data['number']}"))
+
     return true
   rescue StandardError => e
     Puppet.err "Could not send incident to Servicenow: #{e}\n#{e.backtrace}"

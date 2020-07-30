@@ -1,8 +1,8 @@
 # rubocop:disable Style/AccessorMethodName
 
-require './spec/support/acceptance/helpers.rb'
-require './spec/support/acceptance/shared_context.rb'
-require './spec/support/acceptance/shared_examples.rb'
+require 'support/acceptance/helpers'
+require 'support/acceptance/shared_examples'
+require 'support/acceptance/shared_contexts'
 
 RSpec.configure do |config|
   include TargetHelpers

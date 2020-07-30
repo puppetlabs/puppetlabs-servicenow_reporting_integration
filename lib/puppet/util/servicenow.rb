@@ -15,6 +15,11 @@ require 'hiera/backend/eyaml/subcommand'
 
 # servicenow.rb
 module Puppet::Util::Servicenow
+  def sn_log_entry(msg)
+    "servicenow report processor: #{msg}"
+  end
+  module_function :sn_log_entry
+
   def settings(settings_file = '/etc/puppetlabs/puppet/servicenow_reporting.yaml')
     settings_hash = YAML.load_file(settings_file)
 
@@ -89,4 +94,43 @@ module Puppet::Util::Servicenow
     end
   end
   module_function :do_snow_request
+
+  def create_incident?(status, corrective_change, noop_pending, incident_creation_conditions)
+    return false if incident_creation_conditions.empty?
+
+    if status == 'failed' && incident_creation_conditions.include?('failed_changes')
+      Puppet.info(sn_log_entry('decision: reportable failed_changes'))
+      return true
+    end
+
+    if noop_pending && incident_creation_conditions.include?('pending_changes')
+      # This will cause an incident to be sent for all reports with pending
+      # changes whether those changes were going to be intentional or
+      # corrective. Puppets API does not currently give us a way to distinguish
+      # between noop changes that would have been either corrective or
+      # intentional.
+      Puppet.info(sn_log_entry('decision: reportable pending_changes'))
+      return true
+    end
+
+    no_changes = status == 'unchanged' && !noop_pending
+
+    if no_changes && incident_creation_conditions.include?('no_changes')
+      Puppet.info(sn_log_entry('decision: reportable no_changes'))
+      return true
+    end
+
+    reportable_change = false
+
+    if corrective_change && incident_creation_conditions.include?('corrective_changes')
+      Puppet.info(sn_log_entry('decision: reportable corrective_changes'))
+      reportable_change = true
+    elsif status == 'changed' && !corrective_change && incident_creation_conditions.include?('intentional_changes')
+      Puppet.info(sn_log_entry('decision: reportable intentional_changes'))
+      reportable_change = true
+    end
+
+    reportable_change
+  end
+  module_function :create_incident?
 end

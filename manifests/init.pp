@@ -40,11 +40,25 @@
 #  The sys_id of the user assigned to the incident as specified in the
 #  sys_user table. Note that if assignment_group is also specified, then
 #  this must correspond to a user who is a member of the assignment_group.
+# @params [Array[Enum['failed_changes', 'corrective_changes', 'intentional_changes', 'pending_changes', 'no_changes'], 1, 3]] incident_creation_report_statuses
+#   The kinds of report attributes that can trigger an incident to be sent to
+#   Servicenow. Choose any of ['failed_changes', 'corrective_changes',
+#   'intentional_changes', 'pending_changes', 'no_changes']. The report
+#   processor will create incidents for reports that have at least one of the
+#   specified attributes. So if you use e.g. the default value
+#   (['failed_changes','corrective_changes']), then the report processor will
+#   create incidents for reports with any failed changes or corrective changes.
+#   The `unchanged` value will create an incident for any report that does not
+#   have _any_ changes (failed, intentional, corrective, _or_ pending)0. Use
+#   this value to create an incident, even if there was Puppet found no
+#   configuration discrepencies and there were no failures. Turn turn off
+#   incident reporting completely, just specify an empty array ([]) for this
+#   parameter, and this module will not create any incidents at all.
 class servicenow_reporting_integration (
   String[1] $instance,
   String[1] $pe_console_url,
   String[1] $caller_id,
-  String $servicenow_credentials_validation_table = 'incident',
+  String $servicenow_credentials_validation_table    = 'incident',
   Optional[String[1]] $user                          = undef,
   Optional[String[1]] $password                      = undef,
   Optional[String[1]] $oauth_token                   = undef,
@@ -56,6 +70,7 @@ class servicenow_reporting_integration (
   Optional[Integer] $urgency                         = undef,
   Optional[String[1]] $assignment_group              = undef,
   Optional[String[1]] $assigned_to                   = undef,
+  Servicenow_reporting_integration::ReportConditions $incident_creation_conditions = ['failed_changes','corrective_changes'],
 ) {
 
   if (($user or $password) and $oauth_token) {
@@ -105,21 +120,22 @@ class servicenow_reporting_integration (
     # should always exist.
     validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
-      instance                  => $instance,
-      pe_console_url            => $pe_console_url,
-      caller_id                 => $caller_id,
-      user                      => $user,
-      password                  => $password,
-      oauth_token               => $oauth_token,
-      category                  => $category,
-      subcategory               => $subcategory,
-      contact_type              => $contact_type,
-      state                     => $state,
-      impact                    => $impact,
-      urgency                   => $urgency,
-      assignment_group          => $assignment_group,
-      assigned_to               => $assigned_to,
-      report_processor_checksum => $report_processor_checksum,
+      instance                     => $instance,
+      pe_console_url               => $pe_console_url,
+      caller_id                    => $caller_id,
+      user                         => $user,
+      password                     => $password,
+      oauth_token                  => $oauth_token,
+      category                     => $category,
+      subcategory                  => $subcategory,
+      contact_type                 => $contact_type,
+      state                        => $state,
+      impact                       => $impact,
+      urgency                      => $urgency,
+      assignment_group             => $assignment_group,
+      assigned_to                  => $assigned_to,
+      incident_creation_conditions => $incident_creation_conditions ,
+      report_processor_checksum    => $report_processor_checksum,
       }),
     notify       => $settings_file_notify,
   }

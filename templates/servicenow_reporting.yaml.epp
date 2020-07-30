@@ -12,6 +12,7 @@
       Optional[Integer] $urgency,
       Optional[String] $assignment_group,
       Optional[String] $assigned_to,
+      Array[String]$incident_creation_conditions,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_checksum,
@@ -32,4 +33,5 @@ impact: <%= $impact %>
 urgency: <%= $urgency %>
 assignment_group: <%= $assignment_group %>
 assigned_to: <%= $assigned_to %>
+incident_creation_conditions: <%= $incident_creation_conditions %>
 report_processor_checksum: <%= $report_processor_checksum %>
