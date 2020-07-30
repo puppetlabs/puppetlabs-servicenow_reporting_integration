@@ -31,6 +31,10 @@
 #  The sys_id of the user assigned to the incident as specified in the
 #  sys_user table. Note that if assignment_group is also specified, then
 #  this must correspond to a user who is a member of the assignment_group.
+# @params [Array[Enum['failed_changes', 'corrective_changes', 'intentional_changes', 'all', 'none'], 1, 3]] incident_creation_report_statuses
+#   The kinds of report status attributes that can trigger an incident to be sent to Servicenow.
+#   Choose any of ['failed_changes', 'corrective_changes', 'intentional_changes', 'pending_changes', 'all', 'none', 'unchanged']
+#   You can also specify 'all' to create incidents for all report statuses or 'none' to completely turn off incident creation
 class servicenow_reporting_integration (
   String[1] $instance,
   String[1] $user,
@@ -45,6 +49,7 @@ class servicenow_reporting_integration (
   Optional[Integer] $urgency            = undef,
   Optional[String[1]] $assignment_group = undef,
   Optional[String[1]] $assigned_to      = undef,
+  Servicenow_reporting_integration::Statuses $incident_creation_report_attributes = ['failed_changes','corrective_changes'],
 ) {
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the report processor
@@ -73,20 +78,21 @@ class servicenow_reporting_integration (
       group   => 'pe-puppet',
       mode    => '0640',
       content => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
-        instance                  => $instance,
-        user                      => $user,
-        password                  => $password,
-        pe_console_url            => $pe_console_url,
-        caller_id                 => $caller_id,
-        category                  => $category,
-        subcategory               => $subcategory,
-        contact_type              => $contact_type,
-        state                     => $state,
-        impact                    => $impact,
-        urgency                   => $urgency,
-        assignment_group          => $assignment_group,
-        assigned_to               => $assigned_to,
-        report_processor_checksum => $report_processor_checksum,
+        instance                            => $instance,
+        user                                => $user,
+        password                            => $password,
+        pe_console_url                      => $pe_console_url,
+        caller_id                           => $caller_id,
+        category                            => $category,
+        subcategory                         => $subcategory,
+        contact_type                        => $contact_type,
+        state                               => $state,
+        impact                              => $impact,
+        urgency                             => $urgency,
+        assignment_group                    => $assignment_group,
+        assigned_to                         => $assigned_to,
+        incident_creation_report_attributes => $incident_creation_report_attributes,
+        report_processor_checksum           => $report_processor_checksum,
       }),
       notify  => $settings_file_notify,
     }

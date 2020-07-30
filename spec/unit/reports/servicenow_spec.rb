@@ -48,11 +48,14 @@ describe 'ServiceNow report processor' do
     allow(YAML).to receive(:load_file).with(%r{servicenow_reporting\.yaml}).and_return(settings_hash)
   end
 
-  context 'with report status: unchanged' do
-    context 'and noop_pending: false' do
+  context 'with corrective changes enabled' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['corrective_changes'])
+    end
+
+    context 'with report status: changed (intentional)' do
       it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'unchanged'
-        allow(processor).to receive(:noop_pending).and_return false
+        allow(processor).to receive(:status).and_return 'changed'
 
         results = processor.process
         # If the report processor returns false we know that the process
@@ -62,10 +65,91 @@ describe 'ServiceNow report processor' do
       end
     end
 
-    context 'and noop_pending: true' do
+    context 'with report status: changed (corrective)' do
+      it 'creates an incident' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
+
+        expected_incident = {
+          short_description: short_description_regex('changed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+  end
+
+  context 'with intentional change reporting enabled' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['intentional_changes'])
+    end
+
+    context 'with report status: changed (corrective)' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+
+    context 'with report status: changed (intentional)' do
+      it 'creates an incident' do
+        allow(processor).to receive(:status).and_return 'changed'
+
+        expected_incident = {
+          short_description: short_description_regex('changed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+  end
+
+  context 'with failed changes enabled' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['failed_changes'])
+    end
+
+    context 'with report status: failed' do
       it 'creates incident' do
+        allow(processor).to receive(:status).and_return 'failed'
+        expected_incident = {
+          short_description: short_description_regex('failed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+
+    context 'with report status: unchanged' do
+      it 'does nothing' do
         allow(processor).to receive(:status).and_return 'unchanged'
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+  end
+
+  context 'with pending change reporting enabled' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['failed_changes', 'corrective_changes', 'pending_changes'])
+    end
+
+    context 'with report status: changed' do
+      it 'creates an incident when noop is true' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
         allow(processor).to receive(:noop_pending).and_return true
+
         expected_incident = {
           short_description: short_description_regex('pending changes'),
         }
@@ -75,31 +159,153 @@ describe 'ServiceNow report processor' do
     end
   end
 
-  context 'with report status: changed' do
-    it 'creates incident' do
+  context 'with \'all\' events selected' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['all'])
+    end
+
+    context 'with report status: changed (corrective)' do
+      it 'creates an event' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
+
+        expected_incident = {
+          short_description: short_description_regex('changed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+
+    context 'with report status: changed (intentional)' do
+      it 'creates an incident' do
+        allow(processor).to receive(:status).and_return 'changed'
+
+        expected_incident = {
+          short_description: short_description_regex('changed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+
+    context 'with report status: failed' do
+      it 'creates incident' do
+        allow(processor).to receive(:status).and_return 'failed'
+        expected_incident = {
+          short_description: short_description_regex('failed'),
+        }
+        expect_created_incident(expected_incident, expected_credentials)
+        processor.process
+      end
+    end
+
+    it 'creates an incident when noop is true' do
       allow(processor).to receive(:status).and_return 'changed'
+      allow(processor).to receive(:corrective_change).and_return true
+      allow(processor).to receive(:noop_pending).and_return true
+
       expected_incident = {
-        short_description: short_description_regex('changed'),
+        short_description: short_description_regex('pending changes'),
       }
       expect_created_incident(expected_incident, expected_credentials)
       processor.process
     end
   end
 
-  context 'with report status: failed' do
-    it 'creates incident' do
-      allow(processor).to receive(:status).and_return 'failed'
+  context 'with \'unchanged\' selected' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['unchanged'])
+    end
+
+    it 'creates an incident' do
+      allow(processor).to receive(:status).and_return 'unchanged'
+
       expected_incident = {
-        short_description: short_description_regex('failed'),
+        short_description: short_description_regex('unchanged'),
       }
       expect_created_incident(expected_incident, expected_credentials)
       processor.process
+    end
+  end
+
+  context 'with \'none\' selected' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['none'])
+    end
+
+    context 'with report status: changed (corrective)' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+
+    context 'with report status: changed (intentional)' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'changed'
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+
+    context 'with report status: pending changes' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'changed'
+        allow(processor).to receive(:corrective_change).and_return true
+        allow(processor).to receive(:noop_pending).and_return true
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+
+    context 'with report status: failed' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'failed'
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
+    end
+
+    context 'with report status: unchanged' do
+      it 'does nothing' do
+        allow(processor).to receive(:status).and_return 'unchanged'
+
+        results = processor.process
+        # If the report processor returns false we know that the process
+        # method was exited early.
+        expect(results).to be false
+        expect(processor).not_to receive(:do_snow_request)
+      end
     end
   end
 
   context 'receiving response code greater than 200' do
+    let(:settings_hash) do
+      super().merge('incident_creation_report_attributes' => ['all'])
+    end
+
     it 'returns the response code from Servicenow' do
       allow(processor).to receive(:status).and_return 'changed'
+      allow(processor).to receive(:corrective_change).and_return true
 
       [300, 400, 500].each do |response_code|
         allow(processor).to receive(:do_snow_request).and_return(new_mock_response(response_code, { 'sys_id' => 'foo_sys_id' }.to_json))
@@ -155,6 +361,9 @@ describe 'ServiceNow report processor' do
           /TLngBBQBvBP5DV57A1iY/y2extG]
           PASSWORD
         end
+        let(:settings_hash) do
+          super().merge('incident_creation_report_attributes' => ['all'])
+        end
 
         it 'decrypts the password' do
           expected_incident = {
@@ -168,6 +377,9 @@ describe 'ServiceNow report processor' do
       context 'that does not contain whitespace characters' do
         let(:encrypted_password) do
           'ENC[PKCS7,MIIBeQYJKoZIhvcNAQcDoIIBajCCAWYCAQAxggEhMIIBHQIBADAFMAACAQEwDQYJKoZIhvcNAQEBBQAEggEATRNhowHPKMCD2VrAgKz35BZLTG3Iuf34XfG2OUdwNw9IIEqHQiNXKbuqJa6T/6okGGtEVoSYMNk/jgTZS5IFMSZCIELNBcSoqS6ALwgPfyvmsVAzUpdfKIzuyszA4YczMGxUN3Plo5/1EHdzDZjtrEQ9QUHjjBlfOW95i5wKKwCzbAh5KshPyxwZ8cro9zHAzH7W4THDzWNwtn6523ZLrXllbxYYXfwGp3TBJJOvG+LsrdQUvbQOF+efgsgXRi/0e50kSByvUSBtEBkhm7vtDYvlL+0lfHjGk0+Trx9+VxMVb+kEW1P3R5ZC1K50fIflJxlueFsPazzLYcpSWjQB2zA8BgkqhkiG9w0BBwEwHQYJYIZIAWUDBAEqBBBpjFMFKz7Y/7BtRzv5/TLngBBQBvBP5DV57A1iY/y2extG]'
+        end
+        let(:settings_hash) do
+          super().merge('incident_creation_report_attributes' => ['all'])
         end
 
         it 'decrypts the password' do

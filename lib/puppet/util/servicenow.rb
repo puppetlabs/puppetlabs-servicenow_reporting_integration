@@ -86,4 +86,54 @@ module Puppet::Util::Servicenow
     end
   end
   module_function :do_snow_request
+
+  def requested_status?(status, corrective_change, noop_pending)
+    change_types = settings['incident_creation_report_attributes']
+
+    if change_types.include? 'none'
+      Puppet.info('servicenow reporting: incident_creation_report_attributes includes \'none\'.')
+      return false
+    elsif change_types.include? 'unchanged'
+      Puppet.info('servicenow reporting: incident_creation_report_attributes includes \'unchanged\'.')
+      return true
+    elsif change_types.include? 'all'
+      change_types = ['failed_changes', 'corrective_changes', 'intentional_changes', 'pending_changes']
+    end
+
+    report_on_noop = change_types.include? 'pending_changes'
+
+    if status == 'failed' && change_types.include?('failed_changes')
+      Puppet.info('servicenow reporting: decision: reportable failure')
+      return true
+    end
+
+    if noop_pending && !report_on_noop
+      Puppet.info('servicenow reporting: pending change reporting disabled')
+      return false
+    elsif noop_pending && report_on_noop
+      # This branch is a problem. Currently, given the data available to report
+      # processors like ours, on noop runs (pending changes), only corrective
+      # changes can generate incidents. An intentional change cannot be detected
+      # on a noop run.
+      Puppet.info('servicenow reporting: pending change reporting enabled')
+      return reportable_change?(change_types, status, corrective_change)
+    else
+      return reportable_change?(change_types, status, corrective_change)
+    end
+  end
+  module_function :requested_status?
+
+  def reportable_change?(change_types, status, corrective_change)
+    reportable_change = false
+    if corrective_change && change_types.include?('corrective_changes')
+      Puppet.info('servicenow reporting: decision: reportable corrective change')
+      reportable_change = true
+    elsif status == 'changed' && !corrective_change && change_types.include?('intentional_changes')
+      Puppet.info('servicenow reporting: decision: reportable intentional change')
+      reportable_change = true
+    end
+
+    reportable_change
+  end
+  module_function :reportable_change?
 end
