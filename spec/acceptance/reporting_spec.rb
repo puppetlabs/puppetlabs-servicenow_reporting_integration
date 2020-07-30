@@ -50,33 +50,9 @@ describe 'ServiceNow reporting' do
     trigger_puppet_run(master)
   end
 
-  before(:each) do
-    # Set up the ServiceNow reporting integration
-    master.apply_manifest(setup_manifest, catch_failures: true)
-    # Set up the site.pp file
-    set_sitepp_content(sitepp_content)
-  end
-  after(:each) do
-    set_sitepp_content('')
-  end
-
   it 'has idempotent setup' do
+    clear_reporting_integration_setup
     master.idempotent_apply(setup_manifest)
-  end
-
-  shared_context 'incident creation test setup' do
-    let(:query) do
-      # This filters all report-processor generated incidents in descending
-      # order, meaning incidents[0] is the most recently created incident
-      'short_descriptionLIKEPuppet^ORDERBYDESCsys_created_on'
-    end
-
-    before(:each) do
-      IncidentHelpers.delete_incidents(query)
-    end
-    after(:each) do
-      IncidentHelpers.delete_incidents(query)
-    end
   end
 
   context 'with report status: unchanged' do
@@ -85,6 +61,8 @@ describe 'ServiceNow reporting' do
         # Puppet should report that nothing happens
         ''
       end
+
+      include_context 'reporting test setup'
 
       it 'does nothing' do
         num_incidents_before_puppet_run = IncidentHelpers.get_incidents('').length
@@ -233,6 +211,8 @@ describe 'ServiceNow reporting' do
       '/etc/puppetlabs/code/environments/production/modules/servicenow_reporting_integration/lib/puppet/reports'
     end
 
+    include_context 'reporting test setup'
+
     before(:each) do
       master.run_shell("rm -f #{created_file_path}")
       master.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
@@ -250,6 +230,49 @@ describe 'ServiceNow reporting' do
         master.run_shell("ls #{created_file_path}")
       rescue => e
         raise "failed to assert that #{created_file_path} was created: #{e}"
+      end
+    end
+  end
+
+  context 'settings file validation' do
+    before(:each) do
+      clear_reporting_integration_setup
+    end
+
+    context 'invalid PE console url' do
+      let(:params) do
+        default_params = super()
+        default_params[:pe_console_url] = 'invalid_url'
+        default_params
+      end
+
+      include_examples 'settings file validation failure'
+    end
+
+    context 'invalid ServiceNow credentials' do
+      let(:params) do
+        default_params = super()
+        default_params[:user] = "invalid_#{default_params[:user]}"
+        default_params
+      end
+
+      include_examples 'settings file validation failure'
+    end
+
+    context 'user wants to skip ServiceNow credentials validation' do
+      let(:params) do
+        default_params = super()
+        default_params[:servicenow_credentials_validation_table] = ''
+        # Provide invalid credentials on purpose to make sure that the ServiceNow credentials
+        # validation is actually skipped
+        default_params[:user] = "invalid_#{default_params[:user]}"
+        default_params
+      end
+
+      it 'can still setup the reporting integration' do
+        master.apply_manifest(setup_manifest, catch_failures: true)
+        reports_setting = master.run_shell('puppet config print reports --section master').stdout.chomp
+        expect(reports_setting).to match(%r{servicenow})
       end
     end
   end

@@ -12,6 +12,12 @@
 #   The PE console url
 # @param [String[1]] caller_id
 #  The sys_id of the incident's caller as specified in the sys_user table
+# @param [String] servicenow_credentials_validation_table
+#  The table to read for validating the provided ServiceNow credentials.
+#  You should set this to another table if the current set of credentials
+#  don't have READ access to the default 'incident' table. Note that you
+#  can turn the ServiceNow credentials validation off by setting this
+#  parameter to the empty string ''.
 # @param [Optional[String[1]]] category
 #  The incident's category
 # @param [Optional[String[1]]] subcategory
@@ -37,14 +43,15 @@ class servicenow_reporting_integration (
   String[1] $password,
   String[1] $pe_console_url,
   String[1] $caller_id,
-  Optional[String[1]] $category         = undef,
-  Optional[String[1]] $subcategory      = undef,
-  Optional[String[1]] $contact_type     = undef,
-  Optional[Integer] $state              = undef,
-  Optional[Integer] $impact             = undef,
-  Optional[Integer] $urgency            = undef,
-  Optional[String[1]] $assignment_group = undef,
-  Optional[String[1]] $assigned_to      = undef,
+  String $servicenow_credentials_validation_table = 'incident',
+  Optional[String[1]] $category                      = undef,
+  Optional[String[1]] $subcategory                   = undef,
+  Optional[String[1]] $contact_type                  = undef,
+  Optional[Integer] $state                           = undef,
+  Optional[Integer] $impact                          = undef,
+  Optional[Integer] $urgency                         = undef,
+  Optional[String[1]] $assignment_group              = undef,
+  Optional[String[1]] $assigned_to                   = undef,
 ) {
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the report processor
@@ -66,31 +73,35 @@ class servicenow_reporting_integration (
   } else {
     $settings_file_notify = []
   }
-  $resource_dependencies = flatten([
-    file { $settings_file_path:
-      ensure  => file,
-      owner   => 'pe-puppet',
-      group   => 'pe-puppet',
-      mode    => '0640',
-      content => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
-        instance                  => $instance,
-        user                      => $user,
-        password                  => $password,
-        pe_console_url            => $pe_console_url,
-        caller_id                 => $caller_id,
-        category                  => $category,
-        subcategory               => $subcategory,
-        contact_type              => $contact_type,
-        state                     => $state,
-        impact                    => $impact,
-        urgency                   => $urgency,
-        assignment_group          => $assignment_group,
-        assigned_to               => $assigned_to,
-        report_processor_checksum => $report_processor_checksum,
+  file { $settings_file_path:
+    ensure       => file,
+    owner        => 'pe-puppet',
+    group        => 'pe-puppet',
+    mode         => '0640',
+    # The '%' is a validate_cmd convention; it corresponds to the settings file's
+    # (temporary) path containing the new content. We also quote the validation_table
+    # argument since that can be an empty string. Finally, this manifest's invoked on
+    # a puppetserver node so the module_directory and the validate_settings.rb script
+    # should always exist.
+    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
+    content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
+      instance                  => $instance,
+      user                      => $user,
+      password                  => $password,
+      pe_console_url            => $pe_console_url,
+      caller_id                 => $caller_id,
+      category                  => $category,
+      subcategory               => $subcategory,
+      contact_type              => $contact_type,
+      state                     => $state,
+      impact                    => $impact,
+      urgency                   => $urgency,
+      assignment_group          => $assignment_group,
+      assigned_to               => $assigned_to,
+      report_processor_checksum => $report_processor_checksum,
       }),
-      notify  => $settings_file_notify,
-    }
-  ])
+    notify       => $settings_file_notify,
+  }
 
   # Update the reports setting in puppet.conf
   ini_subsetting { 'puppetserver puppetconf add servicenow report processor':
@@ -105,6 +116,6 @@ class servicenow_reporting_integration (
     # file resource and the ini_subsetting resource both notify pe-puppetserver,
     # then pe-puppetserver will be refreshed (restarted) only once.
     notify               => Service['pe-puppetserver'],
-    require              => $resource_dependencies,
+    require              => File[$settings_file_path],
   }
 }
