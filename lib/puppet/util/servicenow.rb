@@ -54,7 +54,11 @@ module Puppet::Util::Servicenow
         settings_hash['password'] = password
       end
 
-      # TODO: Add oauth_token decryption here
+      if (oauth_token = settings_hash['oauth_token'])
+        oauth_token_tokens = parser.parse(oauth_token.chomp)
+        oauth_token = oauth_token_tokens.map(&:to_plain_text).join
+        settings_hash['oauth_token'] = oauth_token
+      end
     end
 
     settings_hash

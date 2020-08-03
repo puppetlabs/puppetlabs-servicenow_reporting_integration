@@ -4,10 +4,6 @@
 #   include servicenow_reporting_integration
 # @param [String[1]] instance
 #   The FQDN of the ServiceNow instance
-# @param [String[1]] user
-#   The username of the account
-# @param [String[1]] password
-#   The password of the account
 # @param [String[1]] pe_console_url
 #   The PE console url
 # @param [String[1]] caller_id
@@ -18,6 +14,13 @@
 #  don't have READ access to the default 'incident' table. Note that you
 #  can turn the ServiceNow credentials validation off by setting this
 #  parameter to the empty string ''.
+# @param [String] user
+#  The username of the account with permission to query data
+# @param [String] password
+#  The password of the account used to query data from Servicenow
+# @param [String] oauth_token
+#  An OAuth access token created in Servicenow that can be used in place of a
+#  username and password.
 # @param [Optional[String[1]]] category
 #  The incident's category
 # @param [Optional[String[1]]] subcategory
@@ -39,11 +42,12 @@
 #  this must correspond to a user who is a member of the assignment_group.
 class servicenow_reporting_integration (
   String[1] $instance,
-  String[1] $user,
-  String[1] $password,
   String[1] $pe_console_url,
   String[1] $caller_id,
   String $servicenow_credentials_validation_table = 'incident',
+  Optional[String[1]] $user                          = undef,
+  Optional[String[1]] $password                      = undef,
+  Optional[String[1]] $oauth_token                   = undef,
   Optional[String[1]] $category                      = undef,
   Optional[String[1]] $subcategory                   = undef,
   Optional[String[1]] $contact_type                  = undef,
@@ -53,6 +57,22 @@ class servicenow_reporting_integration (
   Optional[String[1]] $assignment_group              = undef,
   Optional[String[1]] $assigned_to                   = undef,
 ) {
+
+  if (($user or $password) and $oauth_token) {
+    fail('please specify either user/password or oauth_token not both.')
+  }
+
+  unless ($user or $password or $oauth_token) {
+    fail('please specify either user/password or oauth_token')
+  }
+
+  if ($user or $password) {
+    if $user == undef {
+      fail('missing user')
+    } elsif $password == undef {
+      fail('missing password')
+    }
+  }
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the report processor
   $puppet_base = '/etc/puppetlabs/puppet'
@@ -86,10 +106,11 @@ class servicenow_reporting_integration (
     validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                  => $instance,
-      user                      => $user,
-      password                  => $password,
       pe_console_url            => $pe_console_url,
       caller_id                 => $caller_id,
+      user                      => $user,
+      password                  => $password,
+      oauth_token               => $oauth_token,
       category                  => $category,
       subcategory               => $subcategory,
       contact_type              => $contact_type,

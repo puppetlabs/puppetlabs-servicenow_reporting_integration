@@ -26,10 +26,10 @@ describe 'ServiceNow reporting' do
 
     {
       instance: servicenow_instance.uri,
-      user: servicenow_config['user'],
-      password: servicenow_config['password'],
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
+      user: servicenow_config['user'],
+      password: servicenow_config['password'],
     }
   end
   let(:setup_manifest) do
@@ -114,6 +114,36 @@ describe 'ServiceNow reporting' do
 
     include_context 'incident creation test setup'
     include_examples 'incident creation test', 'changed'
+  end
+
+  context 'user specifies a hiera-eyaml encrypted oauth token' do
+    # skip the oauth tests if we don't have an oauth token to test with
+    servicenow_config = servicenow_instance.bolt_config['remote']
+    skip_oauth_tests = false
+    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master.uri))
+    unless using_mock_instance
+      skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
+    end
+
+    puts 'Skipping this test becuase there is no token specified in the test inventory.' if skip_oauth_tests
+
+    let(:params) do
+      default_params = super()
+      default_params.delete(:user)
+      default_params.delete(:password)
+      oauth_token = servicenow_config['oauth_token']
+      default_params[:oauth_token] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
+      default_params
+    end
+    # Use a 'changed' report to test this.
+    let(:sitepp_content) do
+      to_manifest(declare('notify', 'foo'))
+    end
+
+    unless skip_oauth_tests
+      include_context 'incident creation test setup'
+      include_examples 'incident creation test', 'changed'
+    end
   end
 
   context 'user specifies the remaining incident fields' do

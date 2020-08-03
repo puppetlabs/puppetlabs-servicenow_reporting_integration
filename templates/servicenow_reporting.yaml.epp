@@ -1,8 +1,9 @@
 <%- | String $instance,
-      String $user,
-      String $password,
       String $pe_console_url,
       String $caller_id,
+      Optional[String] $user,
+      Optional[String] $password,
+      Optional[String] $oauth_token,
       Optional[String] $category,
       Optional[String] $subcategory,
       Optional[String] $contact_type,
@@ -18,10 +19,11 @@
 # managed by Puppet
 ---
 instance: <%= $instance %>
-user: <%= $user %>
-password: <%= $password %>
 pe_console_url: <%= $pe_console_url %>
 caller_id: <%= $caller_id %>
+user: <%= $user %>
+password: <%= $password %>
+oauth_token: <%= $oauth_token %>
 category: <%= $category %>
 subcategory: <%= $subcategory %>
 contact_type: <%= $contact_type %>
