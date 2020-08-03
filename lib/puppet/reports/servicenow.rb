@@ -36,7 +36,7 @@ Puppet::Reports.register_report(:servicenow) do
                                incident_data,
                                user: settings_hash['user'],
                                password: settings_hash['password'],
-                               oauth_token: settings_hash['oauth_token'])
+                               token: settings_hash['token'])
 
     raise "Incident creation failed. Error from #{endpoint} (status: #{response.code}): #{response.body}" if response.code.to_i >= 300
     return true

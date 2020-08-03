@@ -55,14 +55,18 @@ module Puppet::Util::Servicenow
         settings_hash['password'] = password
       end
 
-      # TODO: Add oauth_token decryption here
+      if (token = settings_hash['token'])
+        token_tokens = parser.parse(token.chomp)
+        token = token_tokens.map(&:to_plain_text).join
+        settings_hash['token'] = token
+      end
     end
 
     settings_hash
   end
   module_function :settings
 
-  def do_snow_request(uri, http_verb, body, user: nil, password: nil, oauth_token: nil)
+  def do_snow_request(uri, http_verb, body, user: nil, password: nil, token: nil)
     uri = URI.parse(uri)
 
     Net::HTTP.start(uri.host,
@@ -76,8 +80,8 @@ module Puppet::Util::Servicenow
       # Add uri, fields and authentication to request
       request = request_class.new("#{uri.path}?#{uri.query}", header)
       request.body = body.to_json
-      if oauth_token
-        request['Authorization'] = "Bearer #{oauth_token}"
+      if token
+        request['Authorization'] = "Bearer #{token}"
       else
         request.basic_auth(user, password)
       end

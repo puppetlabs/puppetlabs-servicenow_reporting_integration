@@ -26,10 +26,10 @@ describe 'ServiceNow reporting' do
 
     {
       instance: servicenow_instance.uri,
-      user: servicenow_config['user'],
-      password: servicenow_config['password'],
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
+      user: servicenow_config['user'],
+      password: servicenow_config['password'],
     }
   end
   let(:setup_manifest) do
@@ -127,6 +127,24 @@ describe 'ServiceNow reporting' do
       default_params = super()
       password = default_params.delete(:password)
       default_params[:password] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
+      default_params
+    end
+    # Use a 'changed' report to test this.
+    let(:sitepp_content) do
+      to_manifest(declare('notify', 'foo'))
+    end
+
+    include_context 'incident creation test setup'
+    include_examples 'incident creation test', 'changed'
+  end
+
+  context 'user specifies a hiera-eyaml encrypted token' do
+    let(:params) do
+      default_params = super()
+      default_params.delete(:user)
+      default_params.delete(:password)
+      token = servicenow_instance.bolt_config['remote']['oauth_token']
+      default_params[:token] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{token} -o string").stdout
       default_params
     end
     # Use a 'changed' report to test this.

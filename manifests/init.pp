@@ -4,14 +4,16 @@
 #   include servicenow_reporting_integration
 # @param [String[1]] instance
 #   The FQDN of the ServiceNow instance
-# @param [String[1]] user
-#   The username of the account
-# @param [String[1]] password
-#   The password of the account
 # @param [String[1]] pe_console_url
 #   The PE console url
 # @param [String[1]] caller_id
 #  The sys_id of the incident's caller as specified in the sys_user table
+# @param [Optional[String[1]]] user
+#   The username of the account
+# @param [Optional[String[1]]] password
+#   The password of the account
+# @param [Optional[String[1]]] token
+#   The OAuth token of the account
 # @param [Optional[String[1]]] category
 #  The incident's category
 # @param [Optional[String[1]]] subcategory
@@ -33,10 +35,11 @@
 #  this must correspond to a user who is a member of the assignment_group.
 class servicenow_reporting_integration (
   String[1] $instance,
-  String[1] $user,
-  String[1] $password,
   String[1] $pe_console_url,
   String[1] $caller_id,
+  Optional[String[1]] $user             = undef,
+  Optional[String[1]] $password         = undef,
+  Optional[String[1]] $token            = undef,
   Optional[String[1]] $category         = undef,
   Optional[String[1]] $subcategory      = undef,
   Optional[String[1]] $contact_type     = undef,
@@ -46,6 +49,22 @@ class servicenow_reporting_integration (
   Optional[String[1]] $assignment_group = undef,
   Optional[String[1]] $assigned_to      = undef,
 ) {
+
+  if (($user or $password) and $token) {
+    fail('please specify either user/password or token not both.')
+  }
+
+  unless ($user or $password or $token) {
+    fail('please specify either user/password or token')
+  }
+
+  if ($user or $password) {
+    if $user == undef {
+      fail('missing user')
+    } elsif $password == undef {
+      fail('missing password')
+    }
+  }
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the report processor
   $puppet_base = '/etc/puppetlabs/puppet'
@@ -74,10 +93,11 @@ class servicenow_reporting_integration (
       mode    => '0640',
       content => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
         instance                  => $instance,
-        user                      => $user,
-        password                  => $password,
         pe_console_url            => $pe_console_url,
         caller_id                 => $caller_id,
+        user                      => $user,
+        password                  => $password,
+        token                     => $token,
         category                  => $category,
         subcategory               => $subcategory,
         contact_type              => $contact_type,

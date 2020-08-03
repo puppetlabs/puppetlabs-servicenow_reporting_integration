@@ -14,10 +14,10 @@ describe 'servicenow_reporting_integration' do
   let(:params) do
     {
       'instance'       => 'foo_instance',
-      'user'           => 'foo_user',
-      'password'       => 'foo_password',
       'pe_console_url' => 'foo_pe_console_url',
       'caller_id'      => 'foo_caller_id',
+      'user'           => 'foo_user',
+      'password'       => 'foo_password',
     }
   end
   # rspec-puppet caches the catalog in each test based on the params/facts.
@@ -53,6 +53,48 @@ describe 'servicenow_reporting_integration' do
     end
 
     it { is_expected.to compile }
+  end
+
+  context 'with a user and password' do
+    it { is_expected.to compile.with_all_deps }
+  end
+
+  context 'with an oauth_token' do
+    let(:params) do
+      super().merge('token' => 'foo_token')
+             .tap { |hs| hs.delete('user') }
+             .tap { |hs| hs.delete('password') }
+    end
+
+    it { is_expected.to compile }
+  end
+
+  context 'with all credentials' do
+    let(:params) { super().merge('token' => 'foo_token') }
+
+    it { is_expected.to compile.and_raise_error(%r{ please specify either user/password or token not both. }) }
+  end
+
+  context 'without any credentials' do
+    let(:params) do
+      super()
+        .tap { |hs| hs.delete('user') }
+        .tap { |hs| hs.delete('password') }
+    end
+
+    it { is_expected.to compile.and_raise_error(%r{ please specify either user/password or token }) }
+  end
+
+  context 'with only a user' do
+    let(:params) { super().tap { |hs| hs.delete('password') } }
+
+    it { is_expected.to compile.and_raise_error(%r{ missing password }) }
+  end
+
+  context 'with only a password' do
+    let(:params) { super().tap { |hs| hs.delete('user') } }
+
+    it { is_expected.to compile.and_raise_error(%r{ missing user }) }
   end
 
   context 'checking the report processor for any changes' do
