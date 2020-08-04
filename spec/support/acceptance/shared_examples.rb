@@ -21,3 +21,11 @@ RSpec.shared_examples 'incident creation test' do |report_status|
     end
   end
 end
+
+RSpec.shared_examples 'settings file validation failure' do
+  it 'reports an error and does not setup the report processor' do
+    master.apply_manifest(setup_manifest, expect_failures: true)
+    reports_setting = master.run_shell('puppet config print reports --section master').stdout.chomp
+    expect(reports_setting).not_to match(%r{servicenow})
+  end
+end

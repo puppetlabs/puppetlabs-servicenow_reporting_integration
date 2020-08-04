@@ -1,6 +1,7 @@
 # rubocop:disable Style/AccessorMethodName
 
 require './spec/support/acceptance/helpers.rb'
+require './spec/support/acceptance/shared_context.rb'
 require './spec/support/acceptance/shared_examples.rb'
 
 RSpec.configure do |config|
@@ -39,6 +40,22 @@ def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
     raise "Puppet run failed\nstdout: #{result[:stdout]}\nstderr: #{result[:stderr]}"
   end
   result
+end
+
+def clear_reporting_integration_setup
+  master.run_shell('rm -rf /etc/puppetlabs/puppet/servicenow_reporting.yaml')
+  # Delete the 'servicenow' report processor
+  reports_setting_manifest = declare(
+    'ini_subsetting',
+    'delete servicenow report processor',
+    ensure: :absent,
+    path: '/etc/puppetlabs/puppet/puppet.conf',
+    section: 'master',
+    setting: 'reports',
+    subsetting: 'servicenow',
+    subsetting_separator: ',',
+  )
+  master.apply_manifest(to_manifest(reports_setting_manifest), catch_failures: true)
 end
 
 def declare(type, title, params = {})
