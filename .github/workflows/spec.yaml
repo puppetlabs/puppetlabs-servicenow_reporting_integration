@@ -25,3 +25,6 @@ jobs:
       with:
         puppet_gem_version: ${{ matrix.puppet_gem_version }}
         check: ${{ matrix.check }}
+
+    - name: Random Name
+      run: echo 'hell World'
