@@ -13,7 +13,7 @@ def expect_created_incident(expected_incident, expected_credentials = {})
     expect(actual_incident).to include(short_description: match(expected_incident[:short_description]))
     expect(actual_credentials).to include(expected_credentials)
 
-    new_mock_response(200, { 'sys_id' => 'foo_sys_id' }.to_json)
+    new_mock_response(200, { 'result' => { 'sys_id' => 'foo_sys_id', 'number' => 1 } }.to_json)
   end
 end
 

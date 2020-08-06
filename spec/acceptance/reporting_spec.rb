@@ -55,54 +55,124 @@ describe 'ServiceNow reporting' do
     master.idempotent_apply(setup_manifest)
   end
 
-  context 'with report status: unchanged' do
-    context 'and noop_pending: false' do
-      let(:sitepp_content) do
-        # Puppet should report that nothing happens
-        ''
+  context 'with default incident_creation_conditions' do
+    context 'with report status: unchanged' do
+      context 'and no pending changes' do
+        let(:sitepp_content) do
+          # Puppet should report that nothing happens
+          ''
+        end
+
+        include_examples 'no incident'
       end
 
-      include_context 'reporting test setup'
+      context 'and pending changes' do
+        let(:sitepp_content) do
+          to_manifest(declare('notify', 'foo', 'noop' => true))
+        end
 
-      it 'does nothing' do
-        num_incidents_before_puppet_run = IncidentHelpers.get_incidents('').length
-        trigger_puppet_run(master, acceptable_exit_codes: [0])
-        num_incidents_after_puppet_run = IncidentHelpers.get_incidents('').length
-        expect(num_incidents_after_puppet_run).to eql(num_incidents_before_puppet_run)
+        include_context 'incident creation test setup'
+
+        include_examples 'no incident'
       end
     end
 
-    context 'and noop_pending: true' do
+    context 'with report status: intentional changes' do
+      # Default parameters report on corrective changes, not intentional changes.
       let(:sitepp_content) do
-        to_manifest(declare('notify', 'foo', 'noop' => true))
+        to_manifest(declare('notify', 'foo'))
       end
 
       include_context 'incident creation test setup'
-      include_examples 'incident creation test', 'noop_pending'
+      include_examples 'no incident'
+    end
+
+    context 'with report status: corrective changes' do
+      include_context 'incident creation test setup'
+      include_context 'corrective change'
+      include_examples 'incident creation test', 'changed'
+    end
+
+    context 'with report status: failed changes' do
+      let(:sitepp_content) do
+        to_manifest(declare('exec', 'foo', 'command' => '/bin/foo_command'))
+      end
+
+      include_context 'incident creation test setup'
+      include_examples 'incident creation test', 'failed'
     end
   end
 
-  context 'with report status: changed' do
-    let(:sitepp_content) do
-      to_manifest(declare('notify', 'foo'))
+  context 'with user-specified incident_creation_report_statuses' do
+    context 'with pending changes reporting enabled' do
+      let(:params) do
+        super().merge('incident_creation_conditions' => ['corrective_changes', 'pending_changes'])
+      end
+
+      context 'with a pending corrective change' do
+        include_context 'incident creation test setup'
+        include_context 'corrective change', true
+        include_examples 'incident creation test', 'pending'
+      end
     end
 
-    include_context 'incident creation test setup'
-    include_examples 'incident creation test', 'changed'
-  end
+    context 'with unchanged reporting enabled' do
+      let(:params) do
+        super().merge('incident_creation_conditions' => ['no_changes'])
+      end
 
-  context 'with report status: failed' do
-    let(:sitepp_content) do
-      to_manifest(declare('exec', 'foo', 'command' => '/bin/foo_command'))
+      context 'with a an unchanged run' do
+        let(:sitepp_content) do
+          # Puppet should report that nothing happens
+          ''
+        end
+
+        include_context 'incident creation test setup'
+        include_examples 'incident creation test', 'unchanged'
+      end
     end
 
-    include_context 'incident creation test setup'
-    include_examples 'incident creation test', 'failed'
+    context 'with no attributes selected ([])' do
+      let(:params) do
+        super().merge('incident_creation_conditions' => [])
+      end
+
+      context 'with a corrective change' do
+        include_context 'incident creation test setup'
+        include_context 'corrective change'
+        include_examples 'no incident'
+      end
+
+      context 'with intentional changes' do
+        # Default parameters report on corrective changes, not intentional changes.
+        let(:sitepp_content) do
+          to_manifest(declare('notify', 'foo'))
+        end
+
+        include_context 'incident creation test setup'
+        include_examples 'no incident'
+      end
+
+      context 'with pending changes' do
+        include_context 'incident creation test setup'
+        include_context 'corrective change', true
+        include_examples 'no incident'
+      end
+
+      context 'with failed changes' do
+        let(:sitepp_content) do
+          to_manifest(declare('exec', 'foo', 'command' => '/bin/foo_command'))
+        end
+
+        include_context 'incident creation test setup'
+        include_examples 'no incident', 'failure'
+      end
+    end
   end
 
   context 'user specifies a hiera-eyaml encrypted password' do
     let(:params) do
-      default_params = super()
+      default_params = super().merge('incident_creation_conditions' => ['intentional_changes'])
       password = default_params.delete(:password)
       default_params[:password] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
       default_params
@@ -133,6 +203,7 @@ describe 'ServiceNow reporting' do
       default_params.delete(:password)
       oauth_token = servicenow_config['oauth_token']
       default_params[:oauth_token] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
+      default_params[:incident_creation_conditions] = ['intentional_changes']
       default_params
     end
     # Use a 'changed' report to test this.
@@ -176,7 +247,7 @@ describe 'ServiceNow reporting' do
     let(:ug_pair) { ug_pair_record }
     let(:params) do
       # ps => params
-      ps = super()
+      ps = super().merge('incident_creation_conditions' => ['intentional_changes'])
 
       ps['category'] = 'software'
       ps['subcategory'] = 'os'
