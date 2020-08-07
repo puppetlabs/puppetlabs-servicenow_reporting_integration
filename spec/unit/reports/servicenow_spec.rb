@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'support/unit/reports/servicenow_spec_helpers'
+require 'support/unit/reports/shared_examples'
 
 require 'puppet/reports'
 
@@ -48,210 +49,138 @@ describe 'ServiceNow report processor' do
     allow(YAML).to receive(:load_file).with(%r{servicenow_reporting\.yaml}).and_return(settings_hash)
   end
 
-  context 'with corrective changes enabled' do
+  context 'when incident_creation_conditions is not an array' do
+    let(:settings_hash) do
+      super().merge('incident_creation_conditions' => 'not_an_array')
+    end
+
+    it 'raises an error' do
+      expect { processor.process }.to raise_error(RuntimeError, %r{not_an_array})
+    end
+  end
+
+  # These tests test that each of the incident creation condition enums do the 'right'
+  # thing, specifically that they do/don't create an incident for different kinds of
+  # reports
+
+  context "when 'failures' is enabled" do
+    let(:settings_hash) do
+      super().merge('incident_creation_conditions' => ['failures'])
+    end
+
+    include_examples 'ictc', report_label: 'failures'
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
+  end
+
+  context "when 'corrective_changes' is enabled" do
     let(:settings_hash) do
       super().merge('incident_creation_conditions' => ['corrective_changes'])
     end
 
-    context 'with report status: changed (intentional)' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'changed'
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
-    end
-
-    context 'with report status: changed (corrective)' do
-      it 'creates an incident' do
-        allow(processor).to receive(:status).and_return 'changed'
-        allow(processor).to receive(:corrective_change).and_return true
-
-        expected_incident = {
-          short_description: short_description_regex('changed'),
-        }
-        expect_created_incident(expected_incident, expected_credentials)
-        processor.process
-      end
-    end
+    include_examples 'ictc', report_label: 'corrective_changes'
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
   end
 
-  context 'with intentional change reporting enabled' do
+  context "when 'intentional_changes' is enabled" do
     let(:settings_hash) do
       super().merge('incident_creation_conditions' => ['intentional_changes'])
     end
 
-    context 'with report status: changed (corrective)' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'changed'
-        allow(processor).to receive(:corrective_change).and_return true
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
-    end
-
-    context 'with report status: changed (intentional)' do
-      it 'creates an incident' do
-        allow(processor).to receive(:status).and_return 'changed'
-
-        expected_incident = {
-          short_description: short_description_regex('changed'),
-        }
-        expect_created_incident(expected_incident, expected_credentials)
-        processor.process
-      end
-    end
+    include_examples 'ictc', report_label: 'intentional_changes'
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
   end
 
-  context 'with failed changes enabled' do
+  context "when 'pending_corrective_changes' is enabled" do
     let(:settings_hash) do
-      super().merge('incident_creation_conditions' => ['failed_changes'])
+      super().merge('incident_creation_conditions' => ['pending_corrective_changes'])
     end
 
-    context 'with report status: failed' do
-      it 'creates incident' do
-        allow(processor).to receive(:status).and_return 'failed'
-        expected_incident = {
-          short_description: short_description_regex('failed'),
-        }
-        expect_created_incident(expected_incident, expected_credentials)
-        processor.process
-      end
-    end
-
-    context 'with report status: unchanged' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'unchanged'
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
-    end
+    include_examples 'ictc', report_label: 'pending_corrective_changes'
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
   end
 
-  context 'with pending change reporting enabled' do
+  context "when 'pending_intentional_changes' is enabled" do
     let(:settings_hash) do
-      super().merge('incident_creation_conditions' => ['failed_changes', 'corrective_changes', 'pending_changes'])
+      super().merge('incident_creation_conditions' => ['pending_intentional_changes'])
     end
 
-    context 'with report status: changed' do
-      it 'creates an incident when noop is true' do
-        allow(processor).to receive(:status).and_return 'changed'
-        allow(processor).to receive(:corrective_change).and_return true
-        allow(processor).to receive(:noop_pending).and_return true
-
-        expected_incident = {
-          short_description: short_description_regex('pending changes'),
-        }
-        expect_created_incident(expected_incident, expected_credentials)
-        processor.process
-      end
-    end
+    include_examples 'ictc', report_label: 'pending_intentional_changes'
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
   end
 
-  context 'with \'no_changes\' selected' do
+  context "when 'always' is enabled" do
     let(:settings_hash) do
-      super().merge('incident_creation_conditions' => ['no_changes'])
+      super().merge('incident_creation_conditions' => ['always'])
     end
 
-    it 'creates an incident' do
-      allow(processor).to receive(:status).and_return 'unchanged'
-
-      expected_incident = {
-        short_description: short_description_regex('unchanged'),
-      }
-      expect_created_incident(expected_incident, expected_credentials)
-      processor.process
-    end
+    include_examples 'ictc', report_label: 'failures'
+    include_examples 'ictc', report_label: 'corrective_changes'
+    include_examples 'ictc', report_label: 'intentional_changes'
+    include_examples 'ictc', report_label: 'pending_corrective_changes'
+    include_examples 'ictc', report_label: 'pending_intentional_changes'
+    include_examples 'ictc', report_label: 'no_changes'
   end
 
-  context 'with \'none\' selected' do
+  context "when 'never' is enabled" do
     let(:settings_hash) do
-      super().merge('incident_creation_conditions' => ['none'])
+      super().merge('incident_creation_conditions' => ['never'])
     end
 
-    context 'with report status: changed (corrective)' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'changed'
-        allow(processor).to receive(:corrective_change).and_return true
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
+  end
 
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
+  context "report has an 'audit' event" do
+    let(:settings_hash) do
+      # Choose an arbitrary 'event' condition here to ensure that the event-looping
+      # logic is triggered
+      super().merge('incident_creation_conditions' => ['corrective_changes'])
     end
 
-    context 'with report status: changed (intentional)' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'changed'
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
+    before(:each) do
+      mock_event_as_resource_status(processor, 'audit', false)
     end
 
-    context 'with report status: pending changes' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'changed'
-        allow(processor).to receive(:corrective_change).and_return true
-        allow(processor).to receive(:noop_pending).and_return true
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
-    end
-
-    context 'with report status: failed' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'failed'
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
-    end
-
-    context 'with report status: unchanged' do
-      it 'does nothing' do
-        allow(processor).to receive(:status).and_return 'unchanged'
-
-        results = processor.process
-        # If the report processor returns false we know that the process
-        # method was exited early.
-        expect(results).to be false
-        expect(processor).not_to receive(:do_snow_request)
-      end
+    it 'still works' do
+      expect(processor).not_to receive(:do_snow_request)
+      results = processor.process
+      # If the report processor returns false we know that the process
+      # method was exited early.
+      expect(results).to be false
     end
   end
 
   context 'receiving response code greater than 200' do
     let(:settings_hash) do
-      super().merge('incident_creation_conditions' => ['corrective_changes'])
+      super().merge('incident_creation_conditions' => ['failures'])
     end
 
     it 'returns the response code from Servicenow' do
-      allow(processor).to receive(:status).and_return 'changed'
-      allow(processor).to receive(:corrective_change).and_return true
+      allow(processor).to receive(:status).and_return 'failed'
 
       [300, 400, 500].each do |response_code|
         allow(processor).to receive(:do_snow_request).and_return(new_mock_response(response_code, { 'sys_id' => 'foo_sys_id' }.to_json))
@@ -308,7 +237,7 @@ describe 'ServiceNow report processor' do
           PASSWORD
         end
         let(:settings_hash) do
-          super().merge('incident_creation_conditions' => ['failed_changes'])
+          super().merge('incident_creation_conditions' => ['failures'])
         end
 
         it 'decrypts the password' do
@@ -325,7 +254,7 @@ describe 'ServiceNow report processor' do
           'ENC[PKCS7,MIIBeQYJKoZIhvcNAQcDoIIBajCCAWYCAQAxggEhMIIBHQIBADAFMAACAQEwDQYJKoZIhvcNAQEBBQAEggEATRNhowHPKMCD2VrAgKz35BZLTG3Iuf34XfG2OUdwNw9IIEqHQiNXKbuqJa6T/6okGGtEVoSYMNk/jgTZS5IFMSZCIELNBcSoqS6ALwgPfyvmsVAzUpdfKIzuyszA4YczMGxUN3Plo5/1EHdzDZjtrEQ9QUHjjBlfOW95i5wKKwCzbAh5KshPyxwZ8cro9zHAzH7W4THDzWNwtn6523ZLrXllbxYYXfwGp3TBJJOvG+LsrdQUvbQOF+efgsgXRi/0e50kSByvUSBtEBkhm7vtDYvlL+0lfHjGk0+Trx9+VxMVb+kEW1P3R5ZC1K50fIflJxlueFsPazzLYcpSWjQB2zA8BgkqhkiG9w0BBwEwHQYJYIZIAWUDBAEqBBBpjFMFKz7Y/7BtRzv5/TLngBBQBvBP5DV57A1iY/y2extG]'
         end
         let(:settings_hash) do
-          super().merge('incident_creation_conditions' => ['failed_changes'])
+          super().merge('incident_creation_conditions' => ['failures'])
         end
 
         it 'decrypts the password' do
@@ -350,7 +279,7 @@ describe 'ServiceNow report processor' do
         default_config
       end
       let(:settings_hash) do
-        super().merge('incident_creation_conditions' => ['failed_changes'])
+        super().merge('incident_creation_conditions' => ['failures'])
       end
 
       include_context 'setup hiera-eyaml'

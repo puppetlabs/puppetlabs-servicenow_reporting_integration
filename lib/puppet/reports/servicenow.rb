@@ -6,17 +6,16 @@ Puppet::Reports.register_report(:servicenow) do
   include Puppet::Util::Servicenow
 
   def process
-    decision_parameters = "status: #{status}, "\
-                          "corrective_change: #{corrective_change}, "\
-                          "noop_pending: #{noop_pending}"
-    Puppet.info(sn_log_entry("report attributes parameters: #{decision_parameters}"))
-
     settings_hash = settings
+
     incident_creation_conditions = settings_hash['incident_creation_conditions']
+    unless incident_creation_conditions.is_a?(Array)
+      raise "settings['incident_creation_conditions'] must be an array, got #{incident_creation_conditions}"
+    end
 
-    Puppet.info(sn_log_entry("user selected attributes: #{incident_creation_conditions}"))
+    Puppet.info(sn_log_entry("incident creation conditions: #{incident_creation_conditions}"))
 
-    unless create_incident?(status, corrective_change, noop_pending, incident_creation_conditions)
+    unless create_incident?(status, resource_statuses, incident_creation_conditions)
       Puppet.info(sn_log_entry('decision: Do not create incident'))
       # do not create an incident
       return false

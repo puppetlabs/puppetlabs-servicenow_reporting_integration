@@ -95,42 +95,53 @@ module Puppet::Util::Servicenow
   end
   module_function :do_snow_request
 
-  def create_incident?(status, corrective_change, noop_pending, incident_creation_conditions)
-    return false if incident_creation_conditions.empty?
-
-    if status == 'failed' && incident_creation_conditions.include?('failed_changes')
-      Puppet.info(sn_log_entry('decision: reportable failed_changes'))
-      return true
+  def create_incident?(report_status, resource_statuses, incident_creation_conditions)
+    # Some incident creation conditions depend on the resource events. Thus, we go ahead
+    # and evaluate these 'event' conditions _before_ evaluating the incident creation
+    # conditions so we can iterate through the resource events only once. This results in
+    # cleaner code for a negligible performance hit, where the performance hit occurs if the
+    # incident creation conditions do _not_ contain an 'event' condition.
+    #
+    # Note that event_conditions is a hash of <condition> => <satisfied?>
+    event_conditions = {
+      'corrective_changes'          => false,
+      'intentional_changes'         => false,
+      'pending_corrective_changes'  => false,
+      'pending_intentional_changes' => false,
+    }
+    resource_statuses.each do |_, resource|
+      resource.events.each do |event|
+        next if event.status == 'failure' || event.status == 'audit'
+        # event.status == 'success' || 'noop'. Either way, we found a satisfying
+        # change condition so determine its name
+        change_condition = event.corrective_change ? 'corrective_changes' : 'intentional_changes'
+        if event.status == 'noop'
+          change_condition = "pending_#{change_condition}"
+        end
+        event_conditions[change_condition] = true
+      end
     end
 
-    if noop_pending && incident_creation_conditions.include?('pending_changes')
-      # This will cause an incident to be sent for all reports with pending
-      # changes whether those changes were going to be intentional or
-      # corrective. Puppets API does not currently give us a way to distinguish
-      # between noop changes that would have been either corrective or
-      # intentional.
-      Puppet.info(sn_log_entry('decision: reportable pending_changes'))
-      return true
+    # Now evaluate the satisfied conditions
+    satisfied_conditions = incident_creation_conditions.select do |condition|
+      if condition == 'always'
+        true
+      elsif condition == 'never'
+        false
+      elsif condition == 'failures'
+        report_status == 'failed'
+      elsif event_conditions.key?(condition)
+        event_conditions[condition]
+      else
+        # We should never hit this code-path
+        Puppet.warning(sn_log_entry("unknown incident creation conditon: #{condition}"))
+        false
+      end
     end
+    Puppet.info(sn_log_entry("satisfied conditions: #{satisfied_conditions}"))
 
-    no_changes = status == 'unchanged' && !noop_pending
-
-    if no_changes && incident_creation_conditions.include?('no_changes')
-      Puppet.info(sn_log_entry('decision: reportable no_changes'))
-      return true
-    end
-
-    reportable_change = false
-
-    if corrective_change && incident_creation_conditions.include?('corrective_changes')
-      Puppet.info(sn_log_entry('decision: reportable corrective_changes'))
-      reportable_change = true
-    elsif status == 'changed' && !corrective_change && incident_creation_conditions.include?('intentional_changes')
-      Puppet.info(sn_log_entry('decision: reportable intentional_changes'))
-      reportable_change = true
-    end
-
-    reportable_change
+    # Make the decision
+    !satisfied_conditions.empty?
   end
   module_function :create_incident?
 end
