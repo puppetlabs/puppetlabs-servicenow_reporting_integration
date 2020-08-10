@@ -82,9 +82,6 @@ class servicenow_reporting_integration (
       fail('missing password')
     }
   }
-  # Warning: These values are parameterized here at the top of this file, but the
-  # path to the yaml file is hard coded in the report processor
-  $puppet_base = '/etc/puppetlabs/puppet'
 
   # If the report processor changed between module versions then we need to restart puppetserver.
   # To detect when the report processor changed, we compare its current version with the version
@@ -94,9 +91,11 @@ class servicenow_reporting_integration (
   # everytime the settings file changes due to non-report processor reasons (like e.g. if the ServiceNow
   # credentials change). We also return the current report processor version so that we can persist it
   # in the settings file.
-  $settings_file_path = "${puppet_base}/servicenow_reporting.yaml"
-  [$report_processor_changed, $report_processor_version] = servicenow_reporting_integration::check_report_processor($settings_file_path)
-  if $report_processor_changed {
+  #
+  # The confdir defaults to /etc/puppetlabs/puppet on *nix systems
+  # https://puppet.com/docs/puppet/5.5/configuration.html#confdir
+  $settings_file_path = "${settings::confdir}/servicenow_reporting.yaml"
+  [$report_processor_changed, $report_processor_version] = servicenow_reporting_integration::check_report_processor($settings_file_path)  if $report_processor_changed {
     # Restart puppetserver to pick-up the changes
     $settings_file_notify = [Service['pe-puppetserver']]
   } else {
@@ -137,7 +136,7 @@ class servicenow_reporting_integration (
   # Update the reports setting in puppet.conf
   ini_subsetting { 'puppetserver puppetconf add servicenow report processor':
     ensure               => present,
-    path                 => "${puppet_base}/puppet.conf",
+    path                 => $settings::config,
     section              => 'master',
     setting              => 'reports',
     subsetting           => 'servicenow',

@@ -20,7 +20,7 @@ module Puppet::Util::Servicenow
   end
   module_function :sn_log_entry
 
-  def settings(settings_file = '/etc/puppetlabs/puppet/servicenow_reporting.yaml')
+  def settings(settings_file = Puppet[:confdir] + '/servicenow_reporting.yaml')
     settings_hash = YAML.load_file(settings_file)
 
     # Since we also support hiera-eyaml encrypted passwords, we'll want to decrypt
