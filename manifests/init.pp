@@ -87,15 +87,15 @@ class servicenow_reporting_integration (
   $puppet_base = '/etc/puppetlabs/puppet'
 
   # If the report processor changed between module versions then we need to restart puppetserver.
-  # To detect when the report processor changed, we compare its current checksum with the checksum
+  # To detect when the report processor changed, we compare its current version with the version
   # stored in the settings file. This is handled by the 'check_report_processor' custom function.
   #
   # Note that the $report_processor_changed variable is necessary to avoid restarting pe-puppetserver
   # everytime the settings file changes due to non-report processor reasons (like e.g. if the ServiceNow
-  # credentials change). We also return the current report processor checksum so that we can persist it
+  # credentials change). We also return the current report processor version so that we can persist it
   # in the settings file.
   $settings_file_path = "${puppet_base}/servicenow_reporting.yaml"
-  [$report_processor_changed, $report_processor_checksum] = servicenow_reporting_integration::check_report_processor($settings_file_path)
+  [$report_processor_changed, $report_processor_version] = servicenow_reporting_integration::check_report_processor($settings_file_path)
   if $report_processor_changed {
     # Restart puppetserver to pick-up the changes
     $settings_file_notify = [Service['pe-puppetserver']]
@@ -129,7 +129,7 @@ class servicenow_reporting_integration (
       assignment_group             => $assignment_group,
       assigned_to                  => $assigned_to,
       incident_creation_conditions => $incident_creation_conditions ,
-      report_processor_checksum    => $report_processor_checksum,
+      report_processor_version     => $report_processor_version,
       }),
     notify       => $settings_file_notify,
   }

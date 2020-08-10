@@ -78,3 +78,10 @@ end
 def to_manifest(*declarations)
   declarations.join("\n")
 end
+
+METADATA_JSON_PATH = '/etc/puppetlabs/code/environments/production/modules/servicenow_reporting_integration/metadata.json'.freeze
+
+def get_metadata_json
+  raw_metadata_json = master.run_shell("cat #{METADATA_JSON_PATH}").stdout.chomp
+  JSON.parse(raw_metadata_json)
+end

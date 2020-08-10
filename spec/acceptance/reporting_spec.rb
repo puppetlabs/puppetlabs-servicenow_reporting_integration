@@ -269,6 +269,9 @@ describe 'ServiceNow reporting' do
     let(:reports_dir) do
       '/etc/puppetlabs/code/environments/production/modules/servicenow_reporting_integration/lib/puppet/reports'
     end
+    let(:old_metadata_json) do
+      get_metadata_json
+    end
 
     include_context 'reporting test setup'
 
@@ -276,10 +279,15 @@ describe 'ServiceNow reporting' do
       master.run_shell("rm -f #{created_file_path}")
       master.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
       write_file(master, "#{reports_dir}/servicenow.rb", report_processor_implementation)
+
+      # Update the metadata.json version to simulate a report processor change
+      new_metadata_json = old_metadata_json.merge('version' => '0.0.0')
+      write_file(master, METADATA_JSON_PATH, JSON.pretty_generate(new_metadata_json))
     end
     after(:each) do
       master.run_shell("rm -f #{created_file_path}")
       master.run_shell("mv #{reports_dir}/servicenow_current.rb #{reports_dir}/servicenow.rb")
+      write_file(master, METADATA_JSON_PATH, JSON.pretty_generate(old_metadata_json))
     end
 
     it 'picks up those changes' do
