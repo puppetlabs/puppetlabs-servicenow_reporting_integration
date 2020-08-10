@@ -10,7 +10,7 @@ RSpec.shared_context 'reporting test setup' do
   end
 end
 
-RSpec.shared_context 'incident creation test setup' do
+RSpec.shared_context 'incident query setup' do
   include_context 'reporting test setup'
 
   let(:query) do
@@ -27,22 +27,26 @@ RSpec.shared_context 'incident creation test setup' do
   end
 end
 
-RSpec.shared_context 'corrective change' do |noop = false|
+# NOTE: The incident query setup also cleans any dangling ServiceNow instances and
+# sets up the master's site.pp for the incident tests. Thus, make sure to place this
+# _before_ the incident query setup so that the latter's postconditions are still
+# maintained (like the master's expected site.pp).
+RSpec.shared_context 'corrective change setup' do |file_resource_hash|
   before(:each) do
+    # Ensure that noop is false (possible if we are setting up a pending corrective
+    # change)
+    params = file_resource_hash['params'].merge('noop' => false)
+    file_resource_hash = file_resource_hash.merge('params' => params)
+
     # For a change to be considered corrective, the resource needs to be managed
     # and in the correct state at least one time, and then a drift from that
-    # state corrected. This setup manages a file and then drifts its state. The
-    # noop added to the resource will still mark the report as noop_pending. A
-    # simply `puppet apply` won't work because method doesn't write anything to
-    # the puppetserver's history of what has and has not been managed in the
-    # past (where the past history is used to calculate corrective changes).
-    # Only `puppet agent -t` will do that.
-    set_sitepp_content(to_manifest(declare('file', '/tmp/test', 'content' => 'hello')))
+    # state corrected. This setup manages a file and then drifts its state. A simple
+    # `puppet apply` (master.apply_manifest) won't work because that won't write anything
+    # to the puppetserver's history of what has and has not been managed in the past (where
+    # the past history is used to calculate corrective changes). Only `puppet agent -t` will
+    # do that.
+    set_sitepp_content(to_manifest(to_declaration(file_resource_hash)))
     trigger_puppet_run(master)
-    write_file(master, '/tmp/test', 'blah')
-
-    if noop
-      set_sitepp_content(declare('file', '/tmp/test', 'content' => 'hello', 'noop' => true))
-    end
+    write_file(master, file_resource_hash['title'], "#{file_resource_hash['params']['content']}_corrective_change_setup")
   end
 end

@@ -56,116 +56,74 @@ describe 'ServiceNow reporting' do
   end
 
   context 'with default incident_creation_conditions' do
-    context 'with report status: unchanged' do
-      context 'and no pending changes' do
-        let(:sitepp_content) do
-          # Puppet should report that nothing happens
-          ''
-        end
-
-        include_examples 'no incident'
-      end
-
-      context 'and pending changes' do
-        let(:sitepp_content) do
-          to_manifest(declare('notify', 'foo', 'noop' => true))
-        end
-
-        include_context 'incident creation test setup'
-
-        include_examples 'no incident'
-      end
-    end
-
-    context 'with report status: intentional changes' do
-      # Default parameters report on corrective changes, not intentional changes.
-      let(:sitepp_content) do
-        to_manifest(declare('notify', 'foo'))
-      end
-
-      include_context 'incident creation test setup'
-      include_examples 'no incident'
-    end
-
-    context 'with report status: corrective changes' do
-      include_context 'incident creation test setup'
-      include_context 'corrective change'
-      include_examples 'incident creation test', 'changed'
-    end
-
-    context 'with report status: failed changes' do
-      let(:sitepp_content) do
-        to_manifest(declare('exec', 'foo', 'command' => '/bin/foo_command'))
-      end
-
-      include_context 'incident creation test setup'
-      include_examples 'incident creation test', 'failed'
-    end
+    include_examples 'ictc', report_label: 'failures'
+    include_examples 'ictc', report_label: 'corrective_changes'
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
   end
 
-  context 'with user-specified incident_creation_report_statuses' do
-    context 'with pending changes reporting enabled' do
-      let(:params) do
-        super().merge('incident_creation_conditions' => ['corrective_changes', 'pending_changes'])
-      end
-
-      context 'with a pending corrective change' do
-        include_context 'incident creation test setup'
-        include_context 'corrective change', true
-        include_examples 'incident creation test', 'pending'
-      end
+  context "with user-specified incident creation conditions (every non-default condition _except_ 'always')" do
+    let(:params) do
+      super().merge('incident_creation_conditions' => ['intentional_changes', 'pending_corrective_changes', 'pending_intentional_changes'])
     end
 
-    context 'with unchanged reporting enabled' do
-      let(:params) do
-        super().merge('incident_creation_conditions' => ['no_changes'])
-      end
+    include_examples 'ictc', report_label: 'intentional_changes'
+    include_examples 'ictc', report_label: 'pending_intentional_changes'
+    include_examples 'ictc', report_label: 'pending_corrective_changes'
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
+  end
 
-      context 'with a an unchanged run' do
-        let(:sitepp_content) do
-          # Puppet should report that nothing happens
-          ''
-        end
-
-        include_context 'incident creation test setup'
-        include_examples 'incident creation test', 'unchanged'
-      end
+  context "when the incident creation condition includes the 'always' condition" do
+    let(:params) do
+      super().merge('incident_creation_conditions' => ['always'])
     end
 
-    context 'with no attributes selected ([])' do
+    include_examples 'ictc', report_label: 'failures'
+    include_examples 'ictc', report_label: 'corrective_changes'
+    include_examples 'ictc', report_label: 'intentional_changes'
+    include_examples 'ictc', report_label: 'pending_intentional_changes'
+    include_examples 'ictc', report_label: 'pending_corrective_changes'
+    include_examples 'ictc', report_label: 'no_changes'
+  end
+
+  context "when incident_creation_conditions == ['never']" do
+    let(:params) do
+      super().merge('incident_creation_conditions' => ['never'])
+    end
+
+    include_examples 'ictc', report_label: 'failures', noop_test: true
+    include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_intentional_changes', noop_test: true
+    include_examples 'ictc', report_label: 'pending_corrective_changes', noop_test: true
+    include_examples 'ictc', report_label: 'no_changes', noop_test: true
+  end
+
+  # This is testing a bugfix from a previous module version
+  context 'distinguishing intentional changes from corrective changes' do
+    context "incident creation conditions include 'intentional_changes' but not 'corrective_changes'" do
       let(:params) do
-        super().merge('incident_creation_conditions' => [])
+        super().merge('incident_creation_conditions' => ['intentional_changes'])
       end
 
-      context 'with a corrective change' do
-        include_context 'incident creation test setup'
-        include_context 'corrective change'
-        include_examples 'no incident'
-      end
+      context 'report with intentional and corrective changes' do
+        # cc => corrective change
+        cc_resource_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
 
-      context 'with intentional changes' do
-        # Default parameters report on corrective changes, not intentional changes.
         let(:sitepp_content) do
-          to_manifest(declare('notify', 'foo'))
+          to_manifest(
+            to_declaration(cc_resource_hash),
+            declare('notify', 'foo_intentional_change'),
+          )
         end
 
-        include_context 'incident creation test setup'
-        include_examples 'no incident'
-      end
-
-      context 'with pending changes' do
-        include_context 'incident creation test setup'
-        include_context 'corrective change', true
-        include_examples 'no incident'
-      end
-
-      context 'with failed changes' do
-        let(:sitepp_content) do
-          to_manifest(declare('exec', 'foo', 'command' => '/bin/foo_command'))
-        end
-
-        include_context 'incident creation test setup'
-        include_examples 'no incident', 'failure'
+        include_context 'corrective change setup', cc_resource_hash
+        include_context 'incident query setup'
+        include_examples 'incident creation test', 'changed'
       end
     end
   end
@@ -182,7 +140,7 @@ describe 'ServiceNow reporting' do
       to_manifest(declare('notify', 'foo'))
     end
 
-    include_context 'incident creation test setup'
+    include_context 'incident query setup'
     include_examples 'incident creation test', 'changed'
   end
 
@@ -212,7 +170,7 @@ describe 'ServiceNow reporting' do
     end
 
     unless skip_oauth_tests
-      include_context 'incident creation test setup'
+      include_context 'incident query setup'
       include_examples 'incident creation test', 'changed'
     end
   end
@@ -265,7 +223,7 @@ describe 'ServiceNow reporting' do
       to_manifest(declare('notify', 'foo'))
     end
 
-    include_context 'incident creation test setup'
+    include_context 'incident query setup'
     include_examples 'incident creation test', 'changed' do
       let(:additional_incident_assertions) do
         ->(incident) {

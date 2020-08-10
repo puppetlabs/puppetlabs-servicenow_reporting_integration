@@ -32,10 +32,10 @@ RSpec.shared_examples 'settings file validation failure' do
   end
 end
 
-RSpec.shared_examples 'no incident' do |expectation|
+RSpec.shared_examples 'no incident' do |report_status|
   it 'does not create an incident' do
-    exit_codes = case expectation
-                 when 'failure'
+    exit_codes = case report_status
+                 when 'failed'
                    [1, 4, 6]
                  else
                    [0, 2]
@@ -44,5 +44,44 @@ RSpec.shared_examples 'no incident' do |expectation|
     trigger_puppet_run(master, acceptable_exit_codes: exit_codes)
     num_incidents_after_puppet_run = IncidentHelpers.get_incidents('').length
     expect(num_incidents_after_puppet_run).to eql(num_incidents_before_puppet_run)
+  end
+end
+
+# 'ictc' => 'incident creation test case'
+RSpec.shared_examples 'ictc' do |report_label: nil, noop_test: false|
+  context "report with #{report_label}" do
+    expected_report_status, resource_hash = case report_label
+                                            when 'failures'
+                                              ['failed', { 'type' => 'exec', 'title' => '/bin/foo_command' }]
+                                            when 'corrective_changes'
+                                              ['changed', { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }]
+                                            when 'intentional_changes'
+                                              ['changed', { 'type' => 'notify', 'title' => 'foo_intentional' }]
+                                            when 'pending_corrective_changes'
+                                              ['pending', { 'type' => 'file', 'title' => '/tmp/pending_corrective_change', 'params' => { 'content' => 'foo', 'noop' => true } }]
+                                            when 'pending_intentional_changes'
+                                              ['pending', { 'type' => 'notify', 'title' => 'foo_pending_intentional', 'params' => { 'noop' => true } }]
+                                            when 'no_changes'
+                                              ['unchanged', nil]
+                                            else
+                                              raise "unknown report_label: #{report_label}"
+                                            end
+
+    let(:sitepp_content) do
+      resource_hash ? to_manifest(to_declaration(resource_hash)) : ''
+    end
+
+    # Include the setup
+    if report_label =~ %r{corrective}
+      include_context 'corrective change setup', resource_hash
+    end
+    include_context 'incident query setup'
+
+    # Include the relevant test
+    if noop_test
+      include_examples 'no incident', expected_report_status
+    else
+      include_examples 'incident creation test', expected_report_status
+    end
   end
 end

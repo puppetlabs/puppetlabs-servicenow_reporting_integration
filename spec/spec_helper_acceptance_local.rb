@@ -71,6 +71,10 @@ def declare(type, title, params = {})
   HERE
 end
 
+def to_declaration(type_hash)
+  declare(type_hash['type'], type_hash['title'], type_hash['params'] || {})
+end
+
 def to_manifest(*declarations)
   declarations.join("\n")
 end
