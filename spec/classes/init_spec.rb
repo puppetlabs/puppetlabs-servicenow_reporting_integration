@@ -98,7 +98,7 @@ describe 'servicenow_reporting_integration' do
   end
 
   context 'checking the report processor for any changes' do
-    let(:settings_file_path) { '/etc/puppetlabs/puppet/servicenow_reporting.yaml' }
+    let(:settings_file_path) { Puppet[:confdir] + '/servicenow_reporting.yaml' }
 
     before(:each) do
       # This handles cases when Puppet::FileSystem is called outside of our
