@@ -13,6 +13,8 @@ describe 'ServiceNow report processor' do
     allow(processor).to receive(:time).and_return '00:00:00'
     allow(processor).to receive(:host).and_return 'host'
     allow(processor).to receive(:job_id).and_return '1'
+    allow(processor).to receive(:time).and_return(Time.now)
+    allow(processor).to receive(:metrics).and_return('time' => { 'total' => 0 })
     processor
   end
 

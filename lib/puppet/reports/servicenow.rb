@@ -9,6 +9,7 @@ Puppet::Reports.register_report(:servicenow) do
     settings_hash = settings
 
     incident_creation_conditions = settings_hash['incident_creation_conditions']
+
     unless incident_creation_conditions.is_a?(Array)
       raise "settings['incident_creation_conditions'] must be an array, got #{incident_creation_conditions}"
     end
@@ -23,7 +24,7 @@ Puppet::Reports.register_report(:servicenow) do
 
     short_description_status = noop_pending ? 'pending changes' : status
     incident_data = {
-      short_description: "Puppet run report #{time} (status: #{short_description_status}) for node #{host}",
+      short_description: "Puppet run report (status: #{short_description_status}) for node #{host} (report time: #{format_report_timestamp(time, metrics)})",
       # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
       # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
       # best and most stable solution we can do (for now) is the description you see here.

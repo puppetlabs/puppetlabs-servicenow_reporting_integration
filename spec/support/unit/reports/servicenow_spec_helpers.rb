@@ -39,5 +39,8 @@ def expect_created_incident(expected_incident, expected_credentials = {})
 end
 
 def short_description_regex(status)
-  Regexp.new("Puppet.*#{processor.time}.*#{Regexp.escape(status)}.*#{processor.host}")
+  # Since the formatted time string is regex only precise to the minute, the unit tests
+  # execute fast enough that race conditions and intermittent failures shouldn't
+  # be a problem.
+  Regexp.new(%r{Puppet.*#{Regexp.escape(status)}.*#{processor.host} \(report time: #{Time.now.strftime('%F %H:%M')}.*\)})
 end
