@@ -144,4 +144,11 @@ module Puppet::Util::Servicenow
     !satisfied_conditions.empty?
   end
   module_function :create_incident?
+
+  def format_report_timestamp(time, metrics)
+    total_time = time + metrics['time']['total']
+    short_date_time = total_time.strftime('%F %H:%M:%S %Z')
+    short_date_time.gsub('UTC', 'Z')
+  end
+  module_function :format_report_timestamp
 end
