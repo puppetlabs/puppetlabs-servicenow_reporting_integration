@@ -50,8 +50,8 @@
 #  If set to `['never']`, then this module will not create any incidents at all.
 class servicenow_reporting_integration (
   String[1] $instance,
-  String[1] $pe_console_url,
   String[1] $caller_id,
+  Optional[String[1]] $pe_console_url                = undef,
   String $servicenow_credentials_validation_table    = 'incident',
   Optional[String[1]] $user                          = undef,
   Optional[String[1]] $password                      = undef,
@@ -81,6 +81,17 @@ class servicenow_reporting_integration (
     } elsif $password == undef {
       fail('missing password')
     }
+  }
+
+  if ($pe_console_url == undef) {
+    # In a monolithic install this value will always be correct. For a multi master
+    # or a multiple compile masters scenario, this will most likely point at the
+    # Master of Masters and still be correct. If for some reason it's wrong, the
+    # user can still provide their own value for $pe_console_url.
+    $final_console_url = "https://${settings::report_server}"
+  }
+  else {
+    $final_console_url = $pe_console_url
   }
 
   # If the report processor changed between module versions then we need to restart puppetserver.
@@ -114,7 +125,7 @@ class servicenow_reporting_integration (
     validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                     => $instance,
-      pe_console_url               => $pe_console_url,
+      pe_console_url               => $final_console_url,
       caller_id                    => $caller_id,
       user                         => $user,
       password                     => $password,
