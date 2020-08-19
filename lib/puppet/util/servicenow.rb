@@ -95,14 +95,8 @@ module Puppet::Util::Servicenow
   end
   module_function :do_snow_request
 
-  def create_incident?(report_status, resource_statuses, incident_creation_conditions)
-    # Some incident creation conditions depend on the resource events. Thus, we go ahead
-    # and evaluate these 'event' conditions _before_ evaluating the incident creation
-    # conditions so we can iterate through the resource events only once. This results in
-    # cleaner code for a negligible performance hit, where the performance hit occurs if the
-    # incident creation conditions do _not_ contain an 'event' condition.
-    #
-    # Note that event_conditions is a hash of <condition> => <satisfied?>
+  # Returns a hash of event conditions
+  def calculate_event_conditions(resource_statuses)
     event_conditions = {
       'corrective_changes'          => false,
       'intentional_changes'         => false,
@@ -121,8 +115,21 @@ module Puppet::Util::Servicenow
         event_conditions[change_condition] = true
       end
     end
+    event_conditions
+  end
+  module_function :calculate_event_conditions
 
-    # Now evaluate the satisfied conditions
+  # Returns an array of satisfied conditions
+  # Note that the 'never' condition will be overridden by any other valid condition
+  def calculate_satisfied_conditions(report_status, resource_statuses, incident_creation_conditions)
+    # Some incident creation conditions depend on the resource events. Thus, we go ahead
+    # and evaluate these 'event' conditions _before_ evaluating the incident creation
+    # conditions so we can iterate through the resource events only once. This results in
+    # cleaner code for a negligible performance hit, where the performance hit occurs if the
+    # incident creation conditions do _not_ contain an 'event' condition.
+    #
+    # Note that event_conditions is a hash of <condition> => <satisfied?>
+    event_conditions = calculate_event_conditions(resource_statuses)
     satisfied_conditions = incident_creation_conditions.select do |condition|
       if condition == 'always'
         true
@@ -139,11 +146,16 @@ module Puppet::Util::Servicenow
       end
     end
     Puppet.info(sn_log_entry("satisfied conditions: #{satisfied_conditions}"))
-
-    # Make the decision
-    !satisfied_conditions.empty?
+    satisfied_conditions
   end
-  module_function :create_incident?
+  module_function :calculate_satisfied_conditions
+
+  def incident_description(satisfied_conditions, settings_hash)
+    'This incident was created based on the following conditions: '\
+    "#{satisfied_conditions.join(', ')}. See the PE console for the full report. "\
+    "You can access the PE console at #{settings_hash['pe_console_url']}."
+  end
+  module_function :incident_description
 
   def format_report_timestamp(time, metrics)
     total_time = time + metrics['time']['total']

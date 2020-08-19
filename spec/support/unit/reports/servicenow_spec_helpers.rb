@@ -32,6 +32,8 @@ def expect_created_incident(expected_incident, expected_credentials = {})
     # Matching key-by-key makes it easier to debug test failures
     expect(actual_incident[:short_description]).to match(expected_incident[:short_description])
 
+    expect(actual_incident[:description]).to match(expected_incident[:description])
+
     expect(actual_credentials).to include(expected_credentials)
 
     new_mock_response(200, { 'result' => { 'sys_id' => 'foo_sys_id', 'number' => 1 } }.to_json)

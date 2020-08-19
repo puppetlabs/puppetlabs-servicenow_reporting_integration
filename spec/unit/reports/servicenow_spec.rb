@@ -245,6 +245,7 @@ describe 'ServiceNow report processor' do
         it 'decrypts the password' do
           expected_incident = {
             short_description: short_description_regex('failed'),
+            description: 'This incident was created based on the following conditions: failures. See the PE console for the full report. You can access the PE console at test_console.',
           }
           expect_created_incident(expected_incident, expected_credentials)
           processor.process
@@ -262,6 +263,7 @@ describe 'ServiceNow report processor' do
         it 'decrypts the password' do
           expected_incident = {
             short_description: short_description_regex('failed'),
+            description: 'This incident was created based on the following conditions: failures. See the PE console for the full report. You can access the PE console at test_console.',
           }
           expect_created_incident(expected_incident, expected_credentials)
           processor.process
@@ -289,6 +291,7 @@ describe 'ServiceNow report processor' do
       it 'decrypts the oauth token' do
         expected_incident = {
           short_description: short_description_regex('failed'),
+          description: 'This incident was created based on the following conditions: failures. See the PE console for the full report. You can access the PE console at test_console.',
         }
         expect_created_incident(expected_incident, oauth_token: 'test_token')
         processor.process

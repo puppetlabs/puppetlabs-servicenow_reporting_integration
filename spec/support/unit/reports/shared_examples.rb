@@ -16,8 +16,11 @@ RSpec.shared_examples 'incident creation test' do |report_status|
                                    raise "invalid report_status #{report_status}. Valid report statuses are 'noop_pending', 'changed', 'failed'"
                                  end
 
+    expected_description = %r{#{settings_hash['incident_creation_conditions'].join(', ')}.*#{settings_hash['pe_console_url']}}
+
     expected_incident = {
       short_description: expected_short_description,
+      description: expected_description,
     }
     expect_created_incident(expected_incident, expected_credentials)
 

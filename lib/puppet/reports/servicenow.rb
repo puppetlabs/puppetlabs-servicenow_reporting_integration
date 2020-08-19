@@ -16,7 +16,9 @@ Puppet::Reports.register_report(:servicenow) do
 
     Puppet.info(sn_log_entry("incident creation conditions: #{incident_creation_conditions}"))
 
-    unless create_incident?(status, resource_statuses, incident_creation_conditions)
+    satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, incident_creation_conditions)
+
+    if satisfied_conditions.empty?
       Puppet.info(sn_log_entry('decision: Do not create incident'))
       # do not create an incident
       return false
@@ -28,7 +30,7 @@ Puppet::Reports.register_report(:servicenow) do
       # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
       # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
       # best and most stable solution we can do (for now) is the description you see here.
-      description: "See PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}",
+      description: incident_description(satisfied_conditions, settings_hash),
       caller_id: settings_hash['caller_id'],
       category: settings_hash['category'],
       subcategory: settings_hash['subcategory'],
