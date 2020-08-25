@@ -11,6 +11,14 @@ RSpec.configure do |config|
     # Stop the puppet service on the master to avoid edge-case conflicting
     # Puppet runs (one triggered by service vs one we trigger)
     master.run_shell('puppet resource service puppet ensure=stopped')
+
+    # Some of the tests require an 'unchanged' Puppet run so they use an 'unchanged' site.pp manifest
+    # to simulate this scenario. However, our 'unchanged' Puppet run will still include the default
+    # PE classes _on top_ of our site.pp manifest. Some of these classes trigger changes whenever we
+    # update the reporting module for the tests. To prevent those changes from happening _while_ running
+    # the tests, we do a quick Puppet run _before_ all the tests to enact the PE module-specific changes.
+    # This way, all of our tests begin with a 'clean' Puppet slate.
+    trigger_puppet_run(master)
   end
 end
 
