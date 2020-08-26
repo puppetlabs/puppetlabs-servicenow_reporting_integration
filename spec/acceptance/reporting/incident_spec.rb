@@ -26,6 +26,7 @@ describe 'ServiceNow reporting: incident creation' do
 
     {
       instance: servicenow_instance.uri,
+      operation_mode: 'incident_management',
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],

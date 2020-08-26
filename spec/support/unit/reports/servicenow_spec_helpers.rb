@@ -58,11 +58,8 @@ def new_mock_response(status, body)
   response
 end
 
-def new_mock_event(status, corrective_change)
-  event = instance_double('resource event')
-  allow(event).to receive(:status).and_return(status)
-  allow(event).to receive(:corrective_change).and_return(corrective_change)
-  event
+def new_mock_event(event_fields = {})
+  Puppet::Transaction::Event.new(event_fields)
 end
 
 def new_mock_resource_status(events)
@@ -71,10 +68,38 @@ def new_mock_resource_status(events)
   status
 end
 
+def mock_events(processor, *events)
+  allow(processor).to receive(:resource_statuses).and_return('mock_resource' => new_mock_resource_status(events))
+end
+
 def mock_event_as_resource_status(processor, event_status, event_corrective_change)
-  mock_events = [new_mock_event(event_status, event_corrective_change)]
+  mock_events = [new_mock_event(status: event_status, corrective_change: event_corrective_change)]
   mock_resource_status = new_mock_resource_status(mock_events)
   allow(processor).to receive(:resource_statuses).and_return('mock_resource' => mock_resource_status)
+end
+
+def expect_sent_event(expected_credentials = {})
+  # do_snow_request will only be called to send an event
+  expect(processor).to receive(:do_snow_request) do |_, _, request_body, actual_credentials|
+    actual_events = request_body[:records]
+    yield actual_events[0]
+    expect(actual_credentials).to include(expected_credentials)
+    new_mock_response(200, '')
+  end
+end
+
+def collect_message_keys(*report_processors)
+  report_processors.map do |processor|
+    message_key = nil
+    allow(processor).to receive(:do_snow_request) do |_, _, request_body, _|
+      actual_events = request_body[:records]
+      message_key = actual_events[0]['message_key']
+      new_mock_response(200, '')
+    end
+    processor.process
+
+    message_key
+  end
 end
 
 def expect_created_incident(expected_incident, expected_credentials = {})

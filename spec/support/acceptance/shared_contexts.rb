@@ -20,10 +20,30 @@ RSpec.shared_context 'incident query setup' do
   end
 
   before(:each) do
-    IncidentHelpers.delete_incidents(query)
+    Helpers.delete_records('incident', query)
   end
   after(:each) do
-    IncidentHelpers.delete_incidents(query)
+    Helpers.delete_records('incident', query)
+  end
+end
+
+RSpec.shared_context 'event query setup' do
+  before(:each) do
+    # Set up the ServiceNow reporting integration
+    master.apply_manifest(setup_manifest, catch_failures: true)
+  end
+
+  let(:query) do
+    # This filters all report-processor generated events in descending
+    # order, meaning events[0] is the most recently created event
+    'sourceLIKEPuppet^ORDERBYDESCtime_of_event'
+  end
+
+  before(:each) do
+    Helpers.delete_records('em_event', query)
+  end
+  after(:each) do
+    Helpers.delete_records('em_event', query)
   end
 end
 

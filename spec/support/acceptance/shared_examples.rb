@@ -14,7 +14,7 @@ RSpec.shared_examples 'incident creation test' do |report_status|
                                                     end
 
     trigger_puppet_run(master, acceptable_exit_codes: puppet_exit_codes)
-    incident = IncidentHelpers.get_single_incident(query)
+    incident = Helpers.get_single_record('incident', query)
     expect(incident['short_description']).to match(expected_short_description)
     expect(incident['description']).to match(Regexp.new(Regexp.escape(master.uri)))
     expect(incident['caller_id']).to eql(kaller['sys_id'])
@@ -40,9 +40,9 @@ RSpec.shared_examples 'no incident' do |report_status|
                  else
                    [0, 2]
                  end
-    num_incidents_before_puppet_run = IncidentHelpers.get_incidents('').length
+    num_incidents_before_puppet_run = Helpers.get_records('incident', '').length
     trigger_puppet_run(master, acceptable_exit_codes: exit_codes)
-    num_incidents_after_puppet_run = IncidentHelpers.get_incidents('').length
+    num_incidents_after_puppet_run = Helpers.get_records('incident', '').length
     expect(num_incidents_after_puppet_run).to eql(num_incidents_before_puppet_run)
   end
 end

@@ -50,22 +50,30 @@
 #  If set to `['never']`, then this module will not create any incidents at all.
 class servicenow_reporting_integration (
   String[1] $instance,
-  String[1] $caller_id,
-  Optional[String[1]] $pe_console_url                = undef,
-  String $servicenow_credentials_validation_table    = 'incident',
-  Optional[String[1]] $user                          = undef,
-  Optional[String[1]] $password                      = undef,
-  Optional[String[1]] $oauth_token                   = undef,
-  Optional[String[1]] $category                      = undef,
-  Optional[String[1]] $subcategory                   = undef,
-  Optional[String[1]] $contact_type                  = undef,
-  Optional[Integer] $state                           = undef,
-  Optional[Integer] $impact                          = undef,
-  Optional[Integer] $urgency                         = undef,
-  Optional[String[1]] $assignment_group              = undef,
-  Optional[String[1]] $assigned_to                   = undef,
+  Optional[String[1]] $user                                                                  = undef,
+  Optional[String[1]] $password                                                              = undef,
+  Optional[String[1]] $oauth_token                                                           = undef,
+  Enum['event_management', 'incident_management'] $operation_mode                            = 'event_management',
+  Optional[String[1]] $caller_id                                                             = undef,
+  Optional[String[1]] $pe_console_url                                                        = undef,
+  Optional[String[1]] $category                                                              = undef,
+  Optional[String[1]] $subcategory                                                           = undef,
+  Optional[String[1]] $contact_type                                                          = undef,
+  Optional[Integer] $state                                                                   = undef,
+  Optional[Integer] $impact                                                                  = undef,
+  Optional[Integer] $urgency                                                                 = undef,
+  Optional[String[1]] $assignment_group                                                      = undef,
+  Optional[String[1]] $assigned_to                                                           = undef,
   Servicenow_reporting_integration::IncidentCreationConditions $incident_creation_conditions = ['failures', 'corrective_changes'],
+  Optional[String] $servicenow_credentials_validation_table                                  = undef,
 ) {
+  if $operation_mode == 'incident_management' {
+    unless $caller_id {
+      # caller_id's a required incident field so make sure its set if we're operating
+      # under 'incident_management' mode
+      fail('please specify the caller_id')
+    }
+  }
 
   if (($user or $password) and $oauth_token) {
     fail('please specify either user/password or oauth_token not both.')
@@ -92,6 +100,14 @@ class servicenow_reporting_integration (
   }
   else {
     $final_console_url = $pe_console_url
+  }
+
+  if $servicenow_credentials_validation_table {
+    $credentials_validation_table = $servicenow_credentials_validation_table
+  } elsif $operation_mode == 'event_management' {
+    $credentials_validation_table = 'em_event'
+  } else {
+    $credentials_validation_table = 'incident'
   }
 
   # If the report processor changed between module versions then we need to restart puppetserver.
@@ -122,9 +138,10 @@ class servicenow_reporting_integration (
     # argument since that can be an empty string. Finally, this manifest's invoked on
     # a puppetserver node so the module_directory and the validate_settings.rb script
     # should always exist.
-    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
+    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${credentials_validation_table}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                     => $instance,
+      operation_mode               => $operation_mode,
       pe_console_url               => $final_console_url,
       caller_id                    => $caller_id,
       user                         => $user,
