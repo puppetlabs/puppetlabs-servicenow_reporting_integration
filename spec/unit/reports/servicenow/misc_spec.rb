@@ -6,9 +6,11 @@ describe 'ServiceNow report processor: miscellaneous tests' do
   let(:processor) { new_processor }
   let(:settings_hash) { default_settings_hash }
   let(:expected_credentials) { default_credentials }
+  let(:facts) { default_facts }
 
   before(:each) do
     mock_settings_file(settings_hash)
+    allow(processor).to receive(:facts).and_return(facts)
   end
 
   context 'loading ServiceNow config' do

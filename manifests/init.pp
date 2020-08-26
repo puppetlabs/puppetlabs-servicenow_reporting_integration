@@ -13,6 +13,8 @@ class servicenow_reporting_integration (
   Optional[String[1]] $oauth_token                                                                     = undef,
   Optional[String] $servicenow_credentials_validation_table                                            = undef,
   Optional[String[1]] $pe_console_url                                                                  = undef,
+  Optional[Array[String[1]]] $include_facts                                                            = ['identity.user', 'ipaddress','memorysize', 'memoryfree', 'os'],
+  Enum['yaml', 'pretty_json', 'json'] $facts_format                                                    = 'pretty_json',
   # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
   Optional[String[1]] $caller_id                                                                       = undef,
   Optional[String[1]] $category                                                                        = undef,
@@ -112,6 +114,8 @@ class servicenow_reporting_integration (
       pending_corrective_changes_event_severity  => $pending_corrective_changes_event_severity,
       pending_intentional_changes_event_severity => $pending_intentional_changes_event_severity,
       no_changes_event_severity                  => $no_changes_event_severity,
+      include_facts                              => $include_facts,
+      facts_format                               => $facts_format,
       }),
     notify       => $settings_file_notify,
   }

@@ -12,6 +12,8 @@ class servicenow_reporting_integration::event_management (
   Optional[Integer[0, 5]] $pending_corrective_changes_event_severity  = 2,
   Optional[Integer[0, 5]] $pending_intentional_changes_event_severity = 1,
   Optional[Integer[0, 5]] $no_changes_event_severity                  = 1,
+  Optional[Array[String[1]]] $include_facts                           = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
+  Enum['yaml', 'pretty_json', 'json'] $facts_format                   = 'yaml',
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
@@ -27,5 +29,7 @@ class servicenow_reporting_integration::event_management (
     pending_corrective_changes_event_severity  => $pending_corrective_changes_event_severity,
     pending_intentional_changes_event_severity => $pending_intentional_changes_event_severity,
     no_changes_event_severity                  => $no_changes_event_severity,
+    include_facts                              => $include_facts,
+    facts_format                               => $facts_format,
   }
 }

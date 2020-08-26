@@ -43,6 +43,8 @@ def default_settings_hash
     'pending_corrective_changes_event_severity'  => 2,
     'pending_intentional_changes_event_severity' => 1,
     'no_changes_event_severity'                  => 5000,
+    'facts_format'                               => 'yaml',
+    'include_facts'                              => ['id', 'os.distro'],
   }
 end
 
@@ -134,4 +136,33 @@ def short_description_regex(status)
   # execute fast enough that race conditions and intermittent failures shouldn't
   # be a problem.
   Regexp.new(%r{Puppet.*#{Regexp.escape(status)}.*#{processor.host} \(report time: #{Time.now.strftime('%F %H:%M')}.*\)})
+end
+
+def default_facts
+  {
+    'id' => 'foo',
+    'ipaddress' => '192.168.0.1',
+    'memorysize' => '7.80 GiB',
+    'memoryfree' => '2.05 GiB',
+    'os' => {
+      'architecture' => 'amd64',
+      'distro' => {
+        'codename' => 'xenial',
+        'description' => 'Ubuntu 16.04.5 LTS',
+        'id' => 'Ubuntu',
+        'release' => {
+          'full' => '16.04',
+          'major' => '16.04',
+        },
+      },
+      'family' => 'Debian',
+      'hardware' => 'x86_64',
+      'name' => 'Ubuntu',
+      'release' => {
+        'full' => '16.04',
+        'major' => '16.04',
+      },
+      'selinux' => { 'enabled' => false },
+    },
+  }
 end
