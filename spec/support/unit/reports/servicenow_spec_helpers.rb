@@ -1,4 +1,55 @@
 require 'json'
+require 'spec_helper'
+require 'support/unit/reports/shared_examples'
+
+require 'puppet/reports'
+
+def new_processor
+  processor = Puppet::Transaction::Report.new('apply')
+  processor.extend(Puppet::Reports.report(:servicenow))
+
+  allow(processor).to receive(:time).and_return '00:00:00'
+  allow(processor).to receive(:host).and_return 'host'
+  allow(processor).to receive(:job_id).and_return '1'
+  allow(processor).to receive(:time).and_return(Time.now)
+  allow(processor).to receive(:metrics).and_return('time' => { 'total' => 0 })
+  # The report processor logs all exceptions to Puppet.err. Thus, we mock it out
+  # so that we can see them (and avoid false-positives).
+  allow(Puppet).to receive(:err) do |msg|
+    raise msg
+  end
+
+  processor
+end
+
+def default_settings_hash
+  {
+    'pe_console_url'   => 'test_console',
+    'caller'           => 'test_caller',
+    'category'         => '1',
+    'contact_type'     => '1',
+    'state'            => '1',
+    'impact'           => '1',
+    'urgency'          => '1',
+    'assignment_group' => '1',
+    'assigned_to'      => '1',
+    'instance'         => 'test_instance',
+    'user'             => 'test_user',
+    'password'         => 'test_password',
+    'oauth_token'      => 'test_token',
+  }
+end
+
+def default_credentials
+  {
+    user: 'test_user',
+    password: 'test_password',
+  }
+end
+
+def mock_settings_file(settings_hash)
+  allow(YAML).to receive(:load_file).with(%r{servicenow_reporting\.yaml}).and_return(settings_hash)
+end
 
 def new_mock_response(status, body)
   response = instance_double('mock HTTP response')
