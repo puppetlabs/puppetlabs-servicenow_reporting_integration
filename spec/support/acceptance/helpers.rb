@@ -79,10 +79,10 @@ module LitmusHelpers
   extend PuppetLitmus
 end
 
-module IncidentHelpers
-  def get_incidents(query)
+module Helpers
+  def get_records(table, query)
     params = {
-      'table' => 'incident',
+      'table' => table,
       'url_params' => {
         'sysparm_query' => query,
         'sysparm_exclude_reference_link' => true,
@@ -92,36 +92,36 @@ module IncidentHelpers
     task_result = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', params)
     task_result.result['result']
   end
-  module_function :get_incidents
+  module_function :get_records
 
-  def get_single_incident(query)
-    snow_err_msg_prefix = "On ServiceNow instance #{servicenow_instance.uri} with query '#{query}'"
+  def get_single_record(table, query)
+    snow_err_msg_prefix = "On ServiceNow instance #{servicenow_instance.uri} with table '#{table}', query '#{query}'"
 
-    incidents = IncidentHelpers.get_incidents(query)
-    raise "#{snow_err_msg_prefix} expected incident matching query but none was found" if incidents.empty?
-    if incidents.length > 1
-      sys_ids = incidents.map { |incident| incident['sys_id'] }
-      raise "#{snow_err_msg_prefix}: found multiple matching incidents. sys_ids: #{sys_ids.join(', ')}"
+    records = Helpers.get_records(table, query)
+    raise "#{snow_err_msg_prefix} expected record matching query but none was found" if records.empty?
+    if records.length > 1
+      sys_ids = records.map { |record| record['sys_id'] }
+      raise "#{snow_err_msg_prefix}: found multiple matching records. sys_ids: #{sys_ids.join(', ')}"
     end
 
-    incidents[0]
+    records[0]
   end
-  module_function :get_single_incident
+  module_function :get_single_record
 
-  def delete_incident(sys_id)
+  def delete_record(table, sys_id)
     params = {
-      'table' => 'incident',
+      'table' => table,
       'sys_id' => sys_id,
     }
 
     servicenow_instance.run_bolt_task('servicenow_tasks::delete_record', params)
   end
-  module_function :delete_incident
+  module_function :delete_record
 
-  def delete_incidents(query)
-    get_incidents(query).each do |incident|
-      delete_incident(incident['sys_id'])
+  def delete_records(table, query)
+    get_records(table, query).each do |record|
+      delete_record(table, record['sys_id'])
     end
   end
-  module_function :delete_incidents
+  module_function :delete_records
 end

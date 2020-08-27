@@ -1,3 +1,4 @@
+require 'digest'
 require 'puppet'
 require 'puppet/util'
 require 'fileutils'
@@ -163,4 +164,34 @@ module Puppet::Util::Servicenow
     short_date_time.gsub('UTC', 'Z')
   end
   module_function :format_report_timestamp
+
+  def calculate_report_message_key_hash(report_status, resource_statuses)
+    # The report message key hash consists of all the fields relevant to
+    # determining a report's uniqueness. In our case, this is the report
+    # status and the resource events.
+    report_message_key_hash = {
+      'status'          => report_status,
+      'resource_events' => nil,
+    }
+
+    resource_events = []
+    resource_statuses.each do |_, resource|
+      resource.events.each do |event|
+        # Some event fields are not relevant when it comes to determining
+        # whether two reports are identical. We delete these unnecessary
+        # event fields before adding the event.
+        event_hash = event.to_data_hash
+        event_hash.delete('historical_value')
+        event_hash.delete('message')
+        event_hash.delete('time')
+        event_hash.delete('redacted')
+
+        resource_events << event_hash
+      end
+    end
+    report_message_key_hash['resource_events'] = resource_events
+
+    report_message_key_hash
+  end
+  module_function :calculate_report_message_key_hash
 end

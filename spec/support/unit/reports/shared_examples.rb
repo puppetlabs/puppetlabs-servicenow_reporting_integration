@@ -99,3 +99,17 @@ RSpec.shared_examples 'ictc' do |report_label: nil, noop_test: false|
     end
   end
 end
+
+RSpec.shared_examples 'same message key' do
+  it 'calculates the same message key for the ServiceNow events' do
+    message_keys = collect_message_keys(processor_one, processor_two)
+    expect(message_keys[0]).to eql(message_keys[1])
+  end
+end
+
+RSpec.shared_examples 'different message key' do
+  it 'calculates different message keys for the ServiceNow events' do
+    message_keys = collect_message_keys(processor_one, processor_two)
+    expect(message_keys[0]).not_to eql(message_keys[1])
+  end
+end

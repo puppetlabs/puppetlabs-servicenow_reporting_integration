@@ -36,6 +36,7 @@ class MockServiceNowInstance < Sinatra::Base
 
     set :tables,
         'incident'          => {},
+        'em_event'          => {},
         'sys_user'          => user_table,
         'sys_user_grmember' => user_grmember_table
   end
@@ -56,6 +57,22 @@ class MockServiceNowInstance < Sinatra::Base
     else
       halt 401, to_error_response('No authorization received. Please use username: mock_user password: mock_password, or OAuthToken: mock_token.')
     end
+  end
+
+  post '/api/global/em/jsonv2' do
+    request_body = request.body.read
+    begin
+      request_body = JSON.parse(request_body)
+    rescue
+      halt 400, to_error_response("request body must be a JSON { \"records\": <array_of_events> }, got #{request_body}")
+    end
+    events = request_body['records']
+
+    events.each do |event|
+      event['sys_id'] = SecureRandom.uuid.delete('-')
+      table('em_event')[event['sys_id']] = event
+    end
+    to_response('Default Bulk Endpoint' => "#{events.length} events were inserted")
   end
 
   post '/api/now/table/:table_name' do |table_name|

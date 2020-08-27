@@ -15,11 +15,11 @@ describe 'servicenow_reporting_integration' do
     {
       'instance'       => 'foo_instance',
       'pe_console_url' => 'foo_pe_console_url',
-      'caller_id'      => 'foo_caller_id',
       'user'           => 'foo_user',
       'password'       => 'foo_password',
     }
   end
+  let(:settings_file_path) { Puppet[:confdir] + '/servicenow_reporting.yaml' }
   # rspec-puppet caches the catalog in each test based on the params/facts.
   # However, some of the tests reuse the same params (like the report processor
   # tests). Thus to clear the cache, we have to reset the facts since the params
@@ -31,28 +31,44 @@ describe 'servicenow_reporting_integration' do
     }
   end
 
-  context 'without the optional parameters' do
-    it { is_expected.to compile }
-  end
-
-  context 'with the optional parameters' do
+  context 'when operation_mode == incident_management' do
     let(:params) do
-      # ps => params
-      ps = super()
-
-      ps['category'] = 'foo_category'
-      ps['subcategory'] = 'foo_subcategory'
-      ps['contact_type'] = 'foo_contact_type'
-      ps['state'] = 1
-      ps['impact'] = 1
-      ps['urgency'] = 1
-      ps['assignment_group'] = 'foo_assignment_group'
-      ps['assigned_to'] = 'foo_assigned_to'
-
-      ps
+      super().merge('operation_mode' => 'incident_management', 'caller_id' => 'foo_caller_id')
     end
 
-    it { is_expected.to compile }
+    context 'without the required parameters' do
+      let(:params) do
+        p = super()
+        p.delete('caller_id')
+        p
+      end
+
+      it { is_expected.to compile.and_raise_error(%r{caller_id}) }
+    end
+
+    context 'without the optional parameters' do
+      it { is_expected.to compile }
+    end
+
+    context 'with the optional parameters' do
+      let(:params) do
+        # ps => params
+        ps = super()
+
+        ps['category'] = 'foo_category'
+        ps['subcategory'] = 'foo_subcategory'
+        ps['contact_type'] = 'foo_contact_type'
+        ps['state'] = 1
+        ps['impact'] = 1
+        ps['urgency'] = 1
+        ps['assignment_group'] = 'foo_assignment_group'
+        ps['assigned_to'] = 'foo_assigned_to'
+
+        ps
+      end
+
+      it { is_expected.to compile }
+    end
   end
 
   context 'with a user and password' do
@@ -98,8 +114,6 @@ describe 'servicenow_reporting_integration' do
   end
 
   context 'checking the report processor for any changes' do
-    let(:settings_file_path) { Puppet[:confdir] + '/servicenow_reporting.yaml' }
-
     before(:each) do
       # This handles cases when Puppet::FileSystem is called outside of our
       # module
@@ -142,6 +156,28 @@ describe 'servicenow_reporting_integration' do
 
       it { is_expected.to contain_file(settings_file_path).with_content(%r{report_processor_version: 1}) }
       it { is_expected.not_to contain_file(settings_file_path).that_notifies(['Service[pe-puppetserver]']) }
+    end
+  end
+
+  context 'settings file validation' do
+    context 'operation_mode == event_management' do
+      it { is_expected.to contain_file(settings_file_path).with_validate_cmd(%r{em_event}) }
+    end
+
+    context 'operation_mode == incident_management' do
+      let(:params) do
+        super().merge('operation_mode' => 'incident_management', 'caller_id' => 'foo_caller_id')
+      end
+
+      it { is_expected.to contain_file(settings_file_path).with_validate_cmd(%r{incident}) }
+    end
+
+    context 'user-specified servicenow_credentials_validation_table' do
+      let(:params) do
+        super().merge('servicenow_credentials_validation_table' => 'foo_validation_table')
+      end
+
+      it { is_expected.to contain_file(settings_file_path).with_validate_cmd(%r{foo_validation_table}) }
     end
   end
 end

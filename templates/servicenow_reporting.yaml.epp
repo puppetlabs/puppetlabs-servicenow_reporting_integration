@@ -1,6 +1,7 @@
 <%- | String $instance,
+      String $operation_mode,
       String $pe_console_url,
-      String $caller_id,
+      Optional[String] $caller_id,
       Optional[String] $user,
       Optional[String] $password,
       Optional[String] $oauth_token,
@@ -20,6 +21,7 @@
 # managed by Puppet
 ---
 instance: <%= $instance %>
+operation_mode: <%= $operation_mode %>
 pe_console_url: <%= $pe_console_url %>
 caller_id: <%= $caller_id %>
 user: <%= $user %>
