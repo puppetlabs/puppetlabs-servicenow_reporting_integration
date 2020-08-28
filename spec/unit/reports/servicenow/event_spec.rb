@@ -11,12 +11,14 @@ describe 'ServiceNow report processor: event_management mode' do
 
   it 'sends a node_report event' do
     allow(processor).to receive(:status).and_return 'changed'
+    allow(processor).to receive(:host).and_return 'fqdn'
     mock_event_as_resource_status(processor, 'success', false)
 
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report')
       expect(actual_event['severity']).to eql('5')
+      expect(actual_event['node']).to eql('fqdn')
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
