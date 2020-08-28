@@ -25,6 +25,7 @@ Puppet::Reports.register_report(:servicenow) do
       'type'     => 'node_report',
       # 5 => 'OK' severity
       'severity' => '5',
+      'node'     => host,
     }
 
     # Compute the message key hash, which contains all relevant information

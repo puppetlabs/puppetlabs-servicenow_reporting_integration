@@ -24,5 +24,6 @@ describe 'ServiceNow reporting: event management' do
     expect(event['type']).to eql('node_report')
     expect(event['severity']).to eql('5')
     expect(event['message_key']).not_to be_empty
+    expect(event['node']).not_to be_empty
   end
 end
