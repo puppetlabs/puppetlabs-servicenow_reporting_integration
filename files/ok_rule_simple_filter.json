@@ -1,0 +1,45 @@
+{
+  "compound_type": "or",
+  "subpredicates": [
+    {
+      "compound_type": "and",
+      "subpredicates": [
+        {
+          "subpredicates": [
+            {
+              "field": {
+                "choices": [],
+                "label": "Type",
+                "name": "type",
+                "value": "node_report"
+              },
+              "operator": {
+                "advancedEditor": "string",
+                "editor": "string",
+                "label": "starts with",
+                "name": "STARTSWITH"
+              },
+              "fieldType": "string"
+            },
+            {
+              "field": {
+                "choices": [],
+                "label": "Severity",
+                "name": "severity",
+                "value": "5"
+              },
+              "operator": {
+                "advancedEditor": "choice",
+                "editor": "field",
+                "label": "is",
+                "name": "="
+              },
+              "fieldType": "choice"
+            }
+          ],
+          "compound_type": "and"
+        }
+      ]
+    }
+  ]
+}

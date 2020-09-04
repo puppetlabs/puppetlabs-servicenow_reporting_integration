@@ -1,0 +1,103 @@
+{
+  "additionalInfoFields": [],
+  "hasChanged": true,
+  "expressions": [],
+  "rawFields": [
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Description",
+      "name": "description",
+      "value": ""
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Node",
+      "name": "node",
+      "value": "milder-whiskey.delivery.puppetlabs.net"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Type",
+      "name": "type",
+      "value": "node_report"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Resource",
+      "name": "resource",
+      "value": ""
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Message key",
+      "name": "message_key",
+      "value": "2891d082e5af0c2401f85b1d5b73598dfea654f8"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Severity",
+      "name": "severity",
+      "value": "5"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Metric Name",
+      "name": "metric_name",
+      "value": ""
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Source instance",
+      "name": "event_class",
+      "value": ""
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Source",
+      "name": "source",
+      "value": "Puppet"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Resolution state",
+      "name": "resolution_state",
+      "value": "New"
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "CI type",
+      "name": "ci_type",
+      "value": ""
+    },
+    {
+      "mapping": [],
+      "regex": "",
+      "simpleMode": "",
+      "label": "Classification",
+      "name": "classification",
+      "value": "0"
+    }
+  ]
+}

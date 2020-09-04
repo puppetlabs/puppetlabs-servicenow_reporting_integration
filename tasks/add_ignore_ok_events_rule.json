@@ -1,0 +1,48 @@
+{
+    "puppet_task_version": 1,
+    "supports_noop": false,
+    "description": "Add an event rule that will ignore Puppet events with OK status to prevent creating alerts for them.",
+    "remote": true,
+    "parameters": {
+        "name": {
+            "description": "The name of the rule to create. Defaults to 'Puppet Node Report - Info'",
+            "type": "Optional[String]",
+            "default": "Puppet Node Report - Info"
+        },
+        "description": {
+            "description": "Description to add to the rule.",
+            "type": "Optional[String]",
+            "default": "Node reports with severity level 'Ok'."
+        },
+        "order": {
+            "description": "Order of rule application. Defaults to 100.",
+            "type": "Optional[Integer]",
+            "default": 100
+        },
+        "user": {
+            "description": "Username authorized to insert event rules.",
+            "type": "Optional[String]"
+        },
+        "password": {
+            "description": "ServiceNow password",
+            "type": "Optional[String]",
+            "sensitive": true
+        },
+        "instance": {
+            "description": "ServiceNow instance. For example, dev84270.service-now.com.",
+            "type": "Optional[String]"
+        },
+        "oauth_token": {
+            "description": "ServiceNow OAuth token",
+            "type": "Optional[String]",
+            "sensitive": true
+        }
+    },
+    "files": [
+        "ruby_task_helper/files/task_helper.rb",
+        "servicenow_reporting_integration/lib/puppet/util/servicenow.rb",
+        "servicenow_reporting_integration/files/ok_rule_simple_filter.json",
+        "servicenow_reporting_integration/files/event_data.json",
+        "servicenow_reporting_integration/files/add_ignore_event_ok_rule_data.erb"
+    ]
+}
