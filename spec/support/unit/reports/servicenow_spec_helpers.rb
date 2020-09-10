@@ -59,22 +59,29 @@ def new_mock_response(status, body)
 end
 
 def new_mock_event(event_fields = {})
+  event_fields[:property] = 'message'
+  event_fields[:message]  = 'defined \'message\' as \'hello\''
   Puppet::Transaction::Event.new(event_fields)
 end
 
-def new_mock_resource_status(events)
+def new_mock_resource_status(events, status_changed, status_failed)
   status = instance_double('resource status')
   allow(status).to receive(:events).and_return(events)
+  allow(status).to receive(:out_of_sync).and_return(status_changed)
+  allow(status).to receive(:failed).and_return(status_failed)
+  allow(status).to receive(:containment_path).and_return(['foo', 'bar'])
+  allow(status).to receive(:file).and_return('site.pp')
+  allow(status).to receive(:line).and_return(1)
   status
 end
 
 def mock_events(processor, *events)
-  allow(processor).to receive(:resource_statuses).and_return('mock_resource' => new_mock_resource_status(events))
+  allow(processor).to receive(:resource_statuses).and_return('mock_resource' => new_mock_resource_status(events, true, false))
 end
 
-def mock_event_as_resource_status(processor, event_status, event_corrective_change)
+def mock_event_as_resource_status(processor, event_status, event_corrective_change, status_changed = true, status_failed = false)
   mock_events = [new_mock_event(status: event_status, corrective_change: event_corrective_change)]
-  mock_resource_status = new_mock_resource_status(mock_events)
+  mock_resource_status = new_mock_resource_status(mock_events, status_changed, status_failed)
   allow(processor).to receive(:resource_statuses).and_return('mock_resource' => mock_resource_status)
 end
 

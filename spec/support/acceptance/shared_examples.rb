@@ -1,4 +1,4 @@
-RSpec.shared_examples 'incident creation test' do |report_status|
+RSpec.shared_examples 'incident creation test' do |report_status, resource_hash|
   it 'creates an incident' do
     puppet_exit_codes, expected_short_description = case report_status.to_s
                                                     when 'pending'
@@ -18,6 +18,13 @@ RSpec.shared_examples 'incident creation test' do |report_status|
     expect(incident['short_description']).to match(expected_short_description)
     expect(incident['description']).to match(Regexp.new(Regexp.escape(master.uri)))
     expect(incident['caller_id']).to eql(kaller['sys_id'])
+
+    unless expected_short_description == %r{unchanged}
+      expect(incident['description']).to match(%r{Resource Statuses:})
+      expect(incident['description']).to match(resource_title_regex(resource_hash)) unless resource_hash.nil?
+      expect(incident['description']).to match(%r{manifests\/site.pp:2})
+    end
+
     if respond_to?(:additional_incident_assertions)
       additional_incident_assertions.call(incident)
     end
@@ -81,7 +88,7 @@ RSpec.shared_examples 'ictc' do |report_label: nil, noop_test: false|
     if noop_test
       include_examples 'no incident', expected_report_status
     else
-      include_examples 'incident creation test', expected_report_status
+      include_examples 'incident creation test', expected_report_status, resource_hash
     end
   end
 end

@@ -108,7 +108,21 @@ describe 'ServiceNow reporting: incident creation' do
 
         include_context 'corrective change setup', cc_resource_hash
         include_context 'incident query setup'
-        include_examples 'incident creation test', 'changed'
+        include_examples 'incident creation test', 'changed' do
+          let(:additional_incident_assertions) do
+            # Testing to ensure that two resource statuses made it into the
+            # description
+            ->(incident) {
+              # The header should only be in there once.
+              header_count = incident['description'].scan(%r{Resource Statuses:}).size
+              expect(header_count).to be(1)
+              expect(incident['description']).to match(%r{File\[\/tmp\/corrective_change\]\/content:})
+              expect(incident['description']).to match(%r{site.pp:2})
+              expect(incident['description']).to match(%r{Notify\[foo_intentional_change\]\/message:})
+              expect(incident['description']).to match(%r{site.pp:6})
+            }
+          end
+        end
       end
     end
   end
