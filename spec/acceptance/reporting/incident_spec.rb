@@ -26,7 +26,6 @@ describe 'ServiceNow reporting: incident creation' do
 
     {
       instance: servicenow_instance.uri,
-      operation_mode: 'incident_management',
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
@@ -34,7 +33,7 @@ describe 'ServiceNow reporting: incident creation' do
     }
   end
   let(:setup_manifest) do
-    to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration', params))
+    to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration::incident_management', params))
   end
   let(:sitepp_content) do
     # This is test-specific
