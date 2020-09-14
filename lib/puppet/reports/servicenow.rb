@@ -21,11 +21,14 @@ Puppet::Reports.register_report(:servicenow) do
 
   def process_event_management(settings_hash)
     event_data = {
-      'source'   => 'Puppet',
-      'type'     => 'node_report',
-      # 5 => 'OK' severity
-      'severity' => '5',
-      'node'     => host,
+      'source'      => 'Puppet',
+      'type'        => 'node_report',
+      # 5           => 'OK' severity
+      'severity'    => '5',
+      'node'        => host,
+      # Source Instance is sent as event_class in the api
+      # PuppetDB uses Puppet[:node_name_value] to determine the server name so this should be fine.
+      'event_class' => Puppet[:node_name_value],
     }
 
     # Compute the message key hash, which contains all relevant information
