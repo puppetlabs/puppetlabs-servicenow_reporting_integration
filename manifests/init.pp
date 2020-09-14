@@ -1,80 +1,30 @@
-# @summary Configures the servicenow
-#
-# @example
-#   include servicenow_reporting_integration
-# @param [String[1]] instance
-#   The FQDN of the ServiceNow instance
-# @param [String[1]] pe_console_url
-#   The PE console url
-# @param [String[1]] caller_id
-#  The sys_id of the incident's caller as specified in the sys_user table
-# @param [String] servicenow_credentials_validation_table
-#  The table to read for validating the provided ServiceNow credentials.
-#  You should set this to another table if the current set of credentials
-#  don't have READ access to the default 'incident' table. Note that you
-#  can turn the ServiceNow credentials validation off by setting this
-#  parameter to the empty string ''.
-# @param [String] user
-#  The username of the account with permission to query data
-# @param [String] password
-#  The password of the account used to query data from Servicenow
-# @param [String] oauth_token
-#  An OAuth access token created in Servicenow that can be used in place of a
-#  username and password.
-# @param [Optional[String[1]]] category
-#  The incident's category
-# @param [Optional[String[1]]] subcategory
-#  The incident's subcategory
-# @param [Optional[String[1]]] contact_type
-#  The incident's contact type
-# @param[Optional[Integer]] state
-#  The incident's state
-# @param[Optional[Integer]] impact
-#  The incident's impact
-# @param[Optional[Integer]] urgency
-#  The incident's urgency
-# @param [Optional[String[1]]] assignment_group
-#  The sys_id of the incident's assignment group as specified in the
-#  sys_user_group table
-# @param [Optional[String[1]]] assigned_to
-#  The sys_id of the user assigned to the incident as specified in the
-#  sys_user table. Note that if assignment_group is also specified, then
-#  this must correspond to a user who is a member of the assignment_group.
-# @param [Servicenow_reporting_integration::IncidentCreationConditions] incident_creation_conditions
-#  The incident creation conditions. The report processor will create incidents for reports
-#  that satisfy at least one of the specified conditions. For example, if you use the default
-#  value (`['failures', 'corrective_changes']`), then the report processor will create an
-#  incident if the report had any failures _or_ corrective changes.
-#
-#  Note: Set this parameter to `['never']` if you want to completely turn off incident creation.
-#  If set to `['never']`, then this module will not create any incidents at all.
+# @summary
+#   This class contains the common setup code for servicenow_reporting_integration::incident_management
+#   and servicenow_reporting_integration::event_management.
+# 
+# @api private
 class servicenow_reporting_integration (
+  # OPERATION MODE
+  Enum['event_management', 'incident_management'] $operation_mode,
+  # COMMON PARAMETERS
   String[1] $instance,
-  Optional[String[1]] $user                                                                  = undef,
-  Optional[String[1]] $password                                                              = undef,
-  Optional[String[1]] $oauth_token                                                           = undef,
-  Enum['event_management', 'incident_management'] $operation_mode                            = 'event_management',
-  Optional[String[1]] $caller_id                                                             = undef,
-  Optional[String[1]] $pe_console_url                                                        = undef,
-  Optional[String[1]] $category                                                              = undef,
-  Optional[String[1]] $subcategory                                                           = undef,
-  Optional[String[1]] $contact_type                                                          = undef,
-  Optional[Integer] $state                                                                   = undef,
-  Optional[Integer] $impact                                                                  = undef,
-  Optional[Integer] $urgency                                                                 = undef,
-  Optional[String[1]] $assignment_group                                                      = undef,
-  Optional[String[1]] $assigned_to                                                           = undef,
-  Servicenow_reporting_integration::IncidentCreationConditions $incident_creation_conditions = ['failures', 'corrective_changes'],
-  Optional[String] $servicenow_credentials_validation_table                                  = undef,
+  Optional[String[1]] $user                                                                            = undef,
+  Optional[String[1]] $password                                                                        = undef,
+  Optional[String[1]] $oauth_token                                                                     = undef,
+  Optional[String] $servicenow_credentials_validation_table                                            = undef,
+  Optional[String[1]] $pe_console_url                                                                  = undef,
+  # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
+  Optional[String[1]] $caller_id                                                                       = undef,
+  Optional[String[1]] $category                                                                        = undef,
+  Optional[String[1]] $subcategory                                                                     = undef,
+  Optional[String[1]] $contact_type                                                                    = undef,
+  Optional[Integer] $state                                                                             = undef,
+  Optional[Integer] $impact                                                                            = undef,
+  Optional[Integer] $urgency                                                                           = undef,
+  Optional[String[1]] $assignment_group                                                                = undef,
+  Optional[String[1]] $assigned_to                                                                     = undef,
+  Optional[Servicenow_reporting_integration::IncidentCreationConditions] $incident_creation_conditions = undef,
 ) {
-  if $operation_mode == 'incident_management' {
-    unless $caller_id {
-      # caller_id's a required incident field so make sure its set if we're operating
-      # under 'incident_management' mode
-      fail('please specify the caller_id')
-    }
-  }
-
   if (($user or $password) and $oauth_token) {
     fail('please specify either user/password or oauth_token not both.')
   }
@@ -100,14 +50,6 @@ class servicenow_reporting_integration (
   }
   else {
     $final_console_url = $pe_console_url
-  }
-
-  if $servicenow_credentials_validation_table {
-    $credentials_validation_table = $servicenow_credentials_validation_table
-  } elsif $operation_mode == 'event_management' {
-    $credentials_validation_table = 'em_event'
-  } else {
-    $credentials_validation_table = 'incident'
   }
 
   # If the report processor changed between module versions then we need to restart puppetserver.
@@ -138,7 +80,7 @@ class servicenow_reporting_integration (
     # argument since that can be an empty string. Finally, this manifest's invoked on
     # a puppetserver node so the module_directory and the validate_settings.rb script
     # should always exist.
-    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${credentials_validation_table}'",
+    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                     => $instance,
       operation_mode               => $operation_mode,

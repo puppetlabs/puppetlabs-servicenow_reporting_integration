@@ -11,7 +11,7 @@ describe 'ServiceNow reporting: event management' do
     }
   end
   let(:setup_manifest) do
-    to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration', params))
+    to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration::event_management', params))
   end
 
   include_context 'event query setup'
