@@ -25,5 +25,6 @@ describe 'ServiceNow reporting: event management' do
     expect(event['severity']).to eql('5')
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty
+    expect(event['event_class']).to match(Regexp.new(Regexp.escape(master.uri)))
   end
 end
