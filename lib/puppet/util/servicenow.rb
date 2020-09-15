@@ -151,12 +151,13 @@ module Puppet::Util::Servicenow
   end
   module_function :calculate_satisfied_conditions
 
-  def incident_description(satisfied_conditions, settings_hash)
-    'This incident was created based on the following conditions: '\
-    "#{satisfied_conditions.join(', ')}. See the PE console for the full report. "\
-    "You can access the PE console at #{settings_hash['pe_console_url']}."
+  def report_description(settings_hash)
+    # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
+    # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
+    # best and most stable solution we can do (for now) is the description you see here.
+    "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
   end
-  module_function :incident_description
+  module_function :report_description
 
   def format_report_timestamp(time, metrics)
     total_time = time + metrics['time']['total']
