@@ -14,6 +14,11 @@
       Optional[String] $assignment_group,
       Optional[String] $assigned_to,
       Optional[Array[String]] $incident_creation_conditions,
+      Optional[Integer[0, 5]] $failures_event_severity,
+      Optional[Integer[0, 5]] $corrective_changes_event_severity,
+      Optional[Integer[0, 5]] $intentional_changes_event_severity,
+      Optional[Integer[0, 5]] $pending_corrective_changes_event_severity,
+      Optional[Integer[0, 5]] $pending_intentional_changes_event_severity,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_version,
@@ -36,4 +41,9 @@ urgency: <%= $urgency %>
 assignment_group: <%= $assignment_group %>
 assigned_to: <%= $assigned_to %>
 incident_creation_conditions: <%= $incident_creation_conditions %>
+failures_event_severity: <%= $failures_event_severity %>
+corrective_changes_event_severity: <%= $corrective_changes_event_severity %>
+intentional_changes_event_severity: <%= $intentional_changes_event_severity %>
+pending_corrective_changes_event_severity: <%= $pending_corrective_changes_event_severity %>
+pending_intentional_changes_event_severity: <%= $pending_intentional_changes_event_severity %>
 report_processor_version: <%= $report_processor_version %>

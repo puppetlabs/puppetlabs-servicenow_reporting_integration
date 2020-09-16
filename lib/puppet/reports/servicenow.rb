@@ -24,7 +24,7 @@ Puppet::Reports.register_report(:servicenow) do
       'source'      => 'Puppet',
       'type'        => 'node_report',
       # 5           => 'OK' severity
-      'severity'    => '5',
+      'severity'    => calculate_event_severity(resource_statuses, settings_hash).to_s,
       'node'        => host,
       # Source Instance is sent as event_class in the api
       # PuppetDB uses Puppet[:node_name_value] to determine the server name so this should be fine.

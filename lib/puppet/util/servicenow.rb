@@ -113,6 +113,7 @@ module Puppet::Util::Servicenow
   # Returns a hash of event conditions
   def calculate_event_conditions(resource_statuses)
     event_conditions = {
+      'failures'                    => false,
       'corrective_changes'          => false,
       'intentional_changes'         => false,
       'pending_corrective_changes'  => false,
@@ -121,12 +122,14 @@ module Puppet::Util::Servicenow
 
     resource_statuses.values.each do |resource|
       resource.events.each do |event|
-        next if event.status == 'failure' || event.status == 'audit'
+        next if event.status == 'audit'
         # event.status == 'success' || 'noop'. Either way, we found a satisfying
         # change condition so determine its name
-        change_condition = event.corrective_change ? 'corrective_changes' : 'intentional_changes'
-        if event.status == 'noop'
-          change_condition = "pending_#{change_condition}"
+        if event.status == 'failure'
+          change_condition = 'failures'
+        else
+          change_condition = event.corrective_change ? 'corrective_changes' : 'intentional_changes'
+          change_condition = "pending_#{change_condition}" if event.status == 'noop'
         end
         event_conditions[change_condition] = true
       end
@@ -134,6 +137,20 @@ module Puppet::Util::Servicenow
     event_conditions
   end
   module_function :calculate_event_conditions
+
+  def calculate_event_severity(resource_statuses, settings_hash)
+    # https://docs.servicenow.com/bundle/paris-it-operations-management/page/product/event-management-operator/concept/operator-events-alerts.html
+    # 0 => Clear....(The alert no longer needs action.)
+    # 1 => OK.......(No severity. An alert is created. The resource is still functional.)
+    # 2 => Warning..(Attention is required, even though the resource is still functional.)
+    # 3 => Minor....(Partial, non-critical loss of functionality or performance degradation occurred.)
+    # 4 => Major....(Major functionality is severely impaired or performance has degraded.)
+    # 5 => Critical.(The resource is either not functional or critical problems are imminent.)
+    event_conditions = calculate_event_conditions(resource_statuses)
+    event_conditions.select { |_, exists| exists == true }
+                    .map { |condition, _| settings_hash[condition + '_event_severity'] }.sort.first
+  end
+  module_function :calculate_event_severity
 
   # Returns an array of satisfied conditions
   # Note that the 'never' condition will be overridden by any other valid condition
