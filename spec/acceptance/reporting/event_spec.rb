@@ -26,5 +26,7 @@ describe 'ServiceNow reporting: event management' do
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty
     expect(event['event_class']).to match(Regexp.new(Regexp.escape(master.uri)))
+    # Check that the PE console URL is included
+    expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
   end
 end
