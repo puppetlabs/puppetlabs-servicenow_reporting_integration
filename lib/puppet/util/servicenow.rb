@@ -96,6 +96,20 @@ module Puppet::Util::Servicenow
   end
   module_function :do_snow_request
 
+  def human_readable_event_summary(resource_statuses)
+    summary = ''
+    resource_statuses.values.select { |resource| resource.out_of_sync == true || resource.failed == true }.each do |resource|
+      resource_summary = ''
+      resource.events.each do |event|
+        resource_summary << "#{['', resource.containment_path, "#{event.property}: #{event.message}"].flatten.join('/')}\n"
+      end
+      resource_summary << "  Resource Definition: #{resource.file}:#{resource.line}\n\n"
+      summary << resource_summary
+    end
+    summary
+  end
+  module_function :human_readable_event_summary
+
   # Returns a hash of event conditions
   def calculate_event_conditions(resource_statuses)
     event_conditions = {
@@ -104,7 +118,8 @@ module Puppet::Util::Servicenow
       'pending_corrective_changes'  => false,
       'pending_intentional_changes' => false,
     }
-    resource_statuses.each do |_, resource|
+
+    resource_statuses.values.each do |resource|
       resource.events.each do |event|
         next if event.status == 'failure' || event.status == 'audit'
         # event.status == 'success' || 'noop'. Either way, we found a satisfying
@@ -151,11 +166,14 @@ module Puppet::Util::Servicenow
   end
   module_function :calculate_satisfied_conditions
 
-  def report_description(settings_hash)
+  def report_description(settings_hash, resource_statuses)
+    resourse_status_summary = human_readable_event_summary(resource_statuses)
     # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
     # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
     # best and most stable solution we can do (for now) is the description you see here.
-    "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
+    description = "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
+    description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
+    description
   end
   module_function :report_description
 
@@ -176,7 +194,7 @@ module Puppet::Util::Servicenow
     }
 
     resource_events = []
-    resource_statuses.each do |_, resource|
+    resource_statuses.values.each do |resource|
       resource.events.each do |event|
         # Some event fields are not relevant when it comes to determining
         # whether two reports are identical. We delete these unnecessary

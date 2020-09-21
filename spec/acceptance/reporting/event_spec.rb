@@ -26,6 +26,10 @@ describe 'ServiceNow reporting: event management' do
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty
     expect(event['event_class']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(event['description']).to match(%r{Resource Statuses:})
+    expect(event['description']).to match(%r{Notify\[foo\]\/message: defined 'message' as 'foo'})
+    expect(event['description']).to match(%r{manifests\/site.pp:2})
     # Check that the PE console URL is included
     expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
   end

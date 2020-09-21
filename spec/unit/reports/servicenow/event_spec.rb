@@ -19,6 +19,29 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['type']).to eql('node_report')
       expect(actual_event['severity']).to eql('5')
       expect(actual_event['node']).to eql('fqdn')
+      expect(actual_event['description']).to match(%r{test_console})
+      expect(actual_event['description']).to match(%r{Resource Statuses:\s\/foo\/bar\/message: defined 'message' as 'hello'})
+      expect(actual_event['description']).to match(%r{Resource Definition: site.pp:1})
+      # The message key will be tested more thoroughly in other
+      # tests
+      expect(actual_event['message_key']).not_to be_empty
+    end
+
+    processor.process
+  end
+
+  it 'sends a node_report with no resource events' do
+    allow(processor).to receive(:status).and_return 'changed'
+    allow(processor).to receive(:host).and_return 'fqdn'
+    mock_event_as_resource_status(processor, 'success', false, false)
+
+    expect_sent_event(expected_credentials) do |actual_event|
+      expect(actual_event['source']).to eql('Puppet')
+      expect(actual_event['type']).to eql('node_report')
+      expect(actual_event['severity']).to eql('5')
+      expect(actual_event['node']).to eql('fqdn')
+      expect(actual_event['description']).to match(%r{test_console})
+      expect(actual_event['description']).not_to match(%r{Resource Statuses:})
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty

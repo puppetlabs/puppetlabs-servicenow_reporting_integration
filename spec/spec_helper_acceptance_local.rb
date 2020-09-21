@@ -93,3 +93,9 @@ def get_metadata_json
   raw_metadata_json = master.run_shell("cat #{METADATA_JSON_PATH}").stdout.chomp
   JSON.parse(raw_metadata_json)
 end
+
+def resource_title_regex(resource_hash)
+  type = resource_hash['type'].capitalize
+  title = resource_hash['title']
+  %r{#{"#{type}\\[#{title}\\]"}}
+end

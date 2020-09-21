@@ -29,7 +29,7 @@ Puppet::Reports.register_report(:servicenow) do
       # Source Instance is sent as event_class in the api
       # PuppetDB uses Puppet[:node_name_value] to determine the server name so this should be fine.
       'event_class' => Puppet[:node_name_value],
-      'description' => report_description(settings_hash),
+      'description' => report_description(settings_hash, resource_statuses),
     }
 
     # Compute the message key hash, which contains all relevant information
@@ -83,7 +83,7 @@ Puppet::Reports.register_report(:servicenow) do
     short_description_status = noop_pending ? 'pending changes' : status
     incident_data = {
       short_description: "Puppet run report (status: #{short_description_status}) for node #{host} (report time: #{format_report_timestamp(time, metrics)})",
-      description: report_description(settings_hash),
+      description: report_description(settings_hash, resource_statuses),
       caller_id: settings_hash['caller_id'],
       category: settings_hash['category'],
       subcategory: settings_hash['subcategory'],
