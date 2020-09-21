@@ -17,7 +17,7 @@ describe 'ServiceNow report processor: event_management mode' do
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report')
-      expect(actual_event['severity']).to eql('5')
+      expect(actual_event['severity']).to eql('1')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).to match(%r{Resource Statuses:\s\/foo\/bar\/message: defined 'message' as 'hello'})
@@ -38,7 +38,7 @@ describe 'ServiceNow report processor: event_management mode' do
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report')
-      expect(actual_event['severity']).to eql('5')
+      expect(actual_event['severity']).to eql('1')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).not_to match(%r{Resource Statuses:})
@@ -128,6 +128,18 @@ describe 'ServiceNow report processor: event_management mode' do
       end
 
       include_examples 'different message key'
+    end
+  end
+
+  context 'sends the appropriate event severity' do
+    examples = [{ status: 'failure', event_corrective_change: false, expected_severity: '3' },
+                { status: 'success', event_corrective_change: true,  expected_severity: '2' },
+                { status: 'noop',    event_corrective_change: true,  expected_severity: '2' },
+                { status: 'success', event_corrective_change: false, expected_severity: '1' },
+                { status: 'noop',    event_corrective_change: false, expected_severity: '1' }]
+
+    examples.each do |example|
+      include_examples 'event severity levels', example
     end
   end
 

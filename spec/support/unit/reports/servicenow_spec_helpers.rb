@@ -24,19 +24,24 @@ end
 
 def default_settings_hash
   {
-    'pe_console_url'   => 'test_console',
-    'caller'           => 'test_caller',
-    'category'         => '1',
-    'contact_type'     => '1',
-    'state'            => '1',
-    'impact'           => '1',
-    'urgency'          => '1',
-    'assignment_group' => '1',
-    'assigned_to'      => '1',
-    'instance'         => 'test_instance',
-    'user'             => 'test_user',
-    'password'         => 'test_password',
-    'oauth_token'      => 'test_token',
+    'pe_console_url'                             => 'test_console',
+    'caller'                                     => 'test_caller',
+    'category'                                   => '1',
+    'contact_type'                               => '1',
+    'state'                                      => '1',
+    'impact'                                     => '1',
+    'urgency'                                    => '1',
+    'assignment_group'                           => '1',
+    'assigned_to'                                => '1',
+    'instance'                                   => 'test_instance',
+    'user'                                       => 'test_user',
+    'password'                                   => 'test_password',
+    'oauth_token'                                => 'test_token',
+    'failures_event_severity'                    => 3,
+    'corrective_changes_event_severity'          => 2,
+    'intentional_changes_event_severity'         => 1,
+    'pending_corrective_changes_event_severity'  => 2,
+    'pending_intentional_changes_event_severity' => 1,
   }
 end
 
