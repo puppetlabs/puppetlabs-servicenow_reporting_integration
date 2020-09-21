@@ -18,7 +18,7 @@ describe 'ServiceNow report processor: event_management mode' do
 
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
-      expect(actual_event['type']).to eql('node_report')
+      expect(actual_event['type']).to eql('node_report_changed')
       expect(actual_event['severity']).to eql('1')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
@@ -42,7 +42,47 @@ describe 'ServiceNow report processor: event_management mode' do
 
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
-      expect(actual_event['type']).to eql('node_report')
+      expect(actual_event['type']).to eql('node_report_changed')
+      expect(actual_event['severity']).to eql('1')
+      expect(actual_event['node']).to eql('fqdn')
+      expect(actual_event['description']).to match(%r{test_console})
+      expect(actual_event['description']).not_to match(%r{Resource Statuses:})
+      # The message key will be tested more thoroughly in other
+      # tests
+      expect(actual_event['message_key']).not_to be_empty
+    end
+
+    processor.process
+  end
+
+  it 'sends a node_report_failure' do
+    allow(processor).to receive(:status).and_return 'failure'
+    allow(processor).to receive(:host).and_return 'fqdn'
+    mock_event_as_resource_status(processor, 'failure', false, false)
+
+    expect_sent_event(expected_credentials) do |actual_event|
+      expect(actual_event['source']).to eql('Puppet')
+      expect(actual_event['type']).to eql('node_report_failure')
+      expect(actual_event['severity']).to eql('3')
+      expect(actual_event['node']).to eql('fqdn')
+      expect(actual_event['description']).to match(%r{test_console})
+      expect(actual_event['description']).not_to match(%r{Resource Statuses:})
+      # The message key will be tested more thoroughly in other
+      # tests
+      expect(actual_event['message_key']).not_to be_empty
+    end
+
+    processor.process
+  end
+
+  it 'sends a node_report_unchanged' do
+    allow(processor).to receive(:status).and_return 'unchanged'
+    allow(processor).to receive(:host).and_return 'fqdn'
+    mock_event_as_resource_status(processor, 'success', false, false)
+
+    expect_sent_event(expected_credentials) do |actual_event|
+      expect(actual_event['source']).to eql('Puppet')
+      expect(actual_event['type']).to eql('node_report_unchanged')
       expect(actual_event['severity']).to eql('1')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
