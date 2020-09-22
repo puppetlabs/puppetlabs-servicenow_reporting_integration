@@ -147,6 +147,8 @@ module Puppet::Util::Servicenow
     # 4 => Major....(Major functionality is severely impaired or performance has degraded.)
     # 5 => Critical.(The resource is either not functional or critical problems are imminent.)
     event_conditions = calculate_event_conditions(resource_statuses)
+    # return no_changes_event_severity in the case that there are no changes
+    return settings_hash['no_changes_event_severity'] unless event_conditions.values.any?
     event_conditions.select { |_, exists| exists == true }
                     .map { |condition, _| settings_hash[condition + '_event_severity'] }.sort.first
   end

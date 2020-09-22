@@ -11,6 +11,7 @@ class servicenow_reporting_integration::event_management (
   Optional[Integer[0, 5]] $intentional_changes_event_severity         = 1,
   Optional[Integer[0, 5]] $pending_corrective_changes_event_severity  = 2,
   Optional[Integer[0, 5]] $pending_intentional_changes_event_severity = 1,
+  Optional[Integer[0, 5]] $no_changes_event_severity                  = 1,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
@@ -25,5 +26,6 @@ class servicenow_reporting_integration::event_management (
     intentional_changes_event_severity         => $intentional_changes_event_severity,
     pending_corrective_changes_event_severity  => $pending_corrective_changes_event_severity,
     pending_intentional_changes_event_severity => $pending_intentional_changes_event_severity,
+    no_changes_event_severity                  => $no_changes_event_severity,
   }
 }

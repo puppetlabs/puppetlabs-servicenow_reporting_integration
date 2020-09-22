@@ -19,6 +19,7 @@
       Optional[Integer[0, 5]] $intentional_changes_event_severity,
       Optional[Integer[0, 5]] $pending_corrective_changes_event_severity,
       Optional[Integer[0, 5]] $pending_intentional_changes_event_severity,
+      Optional[Integer[0, 5]] $no_changes_event_severity,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_version,
@@ -46,4 +47,5 @@ corrective_changes_event_severity: <%= $corrective_changes_event_severity %>
 intentional_changes_event_severity: <%= $intentional_changes_event_severity %>
 pending_corrective_changes_event_severity: <%= $pending_corrective_changes_event_severity %>
 pending_intentional_changes_event_severity: <%= $pending_intentional_changes_event_severity %>
+no_changes_event_severity: <%= $no_changes_event_severity %>
 report_processor_version: <%= $report_processor_version %>

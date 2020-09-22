@@ -30,6 +30,7 @@ class servicenow_reporting_integration (
   Optional[Integer] $intentional_changes_event_severity                                                = undef,
   Optional[Integer] $pending_corrective_changes_event_severity                                         = undef,
   Optional[Integer] $pending_intentional_changes_event_severity                                        = undef,
+  Optional[Integer] $no_changes_event_severity                                                         = undef,
 ) {
   if (($user or $password) and $oauth_token) {
     fail('please specify either user/password or oauth_token not both.')
@@ -110,6 +111,7 @@ class servicenow_reporting_integration (
       intentional_changes_event_severity         => $intentional_changes_event_severity,
       pending_corrective_changes_event_severity  => $pending_corrective_changes_event_severity,
       pending_intentional_changes_event_severity => $pending_intentional_changes_event_severity,
+      no_changes_event_severity                  => $no_changes_event_severity,
       }),
     notify       => $settings_file_notify,
   }
