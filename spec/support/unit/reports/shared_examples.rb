@@ -114,9 +114,9 @@ RSpec.shared_examples 'different message key' do
   end
 end
 
-RSpec.shared_examples 'event severity levels' do |status: 'success', event_corrective_change: true, expected_severity: '1'|
+RSpec.shared_examples 'event severity levels' do |status: 'success', event_corrective_change: true, expected_severity: '1', status_changed: true, status_failed: false|
   it "sends the appropriate event severity for status: #{status} and event corrective_change: #{event_corrective_change}" do
-    mock_event_as_resource_status(processor, status, event_corrective_change)
+    mock_event_as_resource_status(processor, status, event_corrective_change, status_changed, status_failed)
 
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['severity']).to eql(expected_severity.to_s)

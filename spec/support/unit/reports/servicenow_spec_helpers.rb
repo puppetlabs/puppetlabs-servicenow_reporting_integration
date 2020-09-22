@@ -42,6 +42,7 @@ def default_settings_hash
     'intentional_changes_event_severity'         => 1,
     'pending_corrective_changes_event_severity'  => 2,
     'pending_intentional_changes_event_severity' => 1,
+    'no_changes_event_severity'                  => 5000,
   }
 end
 

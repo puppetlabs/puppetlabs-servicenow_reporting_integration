@@ -132,11 +132,12 @@ describe 'ServiceNow report processor: event_management mode' do
   end
 
   context 'sends the appropriate event severity' do
-    examples = [{ status: 'failure', event_corrective_change: false, expected_severity: '3' },
-                { status: 'success', event_corrective_change: true,  expected_severity: '2' },
-                { status: 'noop',    event_corrective_change: true,  expected_severity: '2' },
-                { status: 'success', event_corrective_change: false, expected_severity: '1' },
-                { status: 'noop',    event_corrective_change: false, expected_severity: '1' }]
+    examples = [{ status: 'failure', event_corrective_change: false, expected_severity: '3',    status_changed: true,  status_failed: false },
+                { status: 'success', event_corrective_change: true,  expected_severity: '2',    status_changed: true,  status_failed: false },
+                { status: 'noop',    event_corrective_change: true,  expected_severity: '2',    status_changed: true,  status_failed: false },
+                { status: 'success', event_corrective_change: false, expected_severity: '1',    status_changed: true,  status_failed: false },
+                { status: 'noop',    event_corrective_change: false, expected_severity: '1',    status_changed: true,  status_failed: false },
+                { status: 'audit',   event_corrective_change: false, expected_severity: '5000', status_changed: false, status_failed: false }]
 
     examples.each do |example|
       include_examples 'event severity levels', example
