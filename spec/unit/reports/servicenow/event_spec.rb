@@ -27,6 +27,7 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{== Facts ==})
       expect(actual_event['description']).to match(%r{id: foo})
       expect(actual_event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
+      expect(actual_event['description']).to match(%r{Report Labels:[\s\S]*intentional_changes})
       expect(actual_event['additional_information']).to match(%r{"facts"})
       expect(actual_event['additional_information']).to match(%r{"id": "foo"})
       expect(actual_event['additional_information']).to match(%r{"ipaddress": "192.168.0.1"})
@@ -97,6 +98,20 @@ describe 'ServiceNow report processor: event_management mode' do
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
+    end
+
+    processor.process
+  end
+
+  it 'includes multiple labels in a description' do
+    events = [new_mock_event(status: 'success', corrective_change: true), new_mock_event(status: 'failure')]
+    mock_resource_statuses = new_mock_resource_status(events, true, true)
+    allow(processor).to receive(:resource_statuses).and_return('mock_resource' => mock_resource_statuses)
+
+    expect_sent_event(expected_credentials) do |actual_event|
+      expect(actual_event['description']).to match(%r{Report Labels:})
+      expect(actual_event['description']).to match(%r{failures})
+      expect(actual_event['description']).to match(%r{corrective_changes})
     end
 
     processor.process

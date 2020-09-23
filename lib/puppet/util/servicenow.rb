@@ -187,10 +187,12 @@ module Puppet::Util::Servicenow
 
   def report_description(settings_hash, resource_statuses)
     resourse_status_summary = human_readable_event_summary(resource_statuses)
+    labels                  = report_labels(resource_statuses)
     # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
     # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
     # best and most stable solution we can do (for now) is the description you see here.
     description = "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
+    description << "\n\n#{labels}" unless labels.nil?
     description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
     description << "\n\n== Facts ==\n#{selected_facts(settings_hash)}"
     description
@@ -280,4 +282,12 @@ module Puppet::Util::Servicenow
     report_message_key_hash
   end
   module_function :calculate_report_message_key_hash
+end
+
+def report_labels(resource_statuses)
+  event_conditions = calculate_event_conditions(resource_statuses).select { |_, present| present == true }
+  labels = event_conditions.keys.map { |condition| "  #{condition}" }
+
+  "Report Labels:\n"\
+  "#{labels.join("\n")}"
 end
