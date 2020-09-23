@@ -27,6 +27,11 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{== Facts ==})
       expect(actual_event['description']).to match(%r{id: foo})
       expect(actual_event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
+      expect(actual_event['additional_information']).to match(%r{"facts"})
+      expect(actual_event['additional_information']).to match(%r{"id": "foo"})
+      expect(actual_event['additional_information']).to match(%r{"ipaddress": "192.168.0.1"})
+      expect(actual_event['additional_information']).to match(%r{"memorysize": "7.80 GiB"})
+      expect(actual_event['additional_information']).to match(%r{"memoryfree": "2.05 GiB"})
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
@@ -87,6 +92,8 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).not_to match(%r{Resource Statuses:})
+      expect(actual_event['additional_information']).to match(%r{"facts"})
+      expect(actual_event['additional_information']).to match(%r{"id": "foo"})
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
