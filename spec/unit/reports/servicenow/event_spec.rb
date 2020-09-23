@@ -4,9 +4,11 @@ describe 'ServiceNow report processor: event_management mode' do
   let(:processor) { new_processor }
   let(:settings_hash) { default_settings_hash.merge('operation_mode' => 'event_management') }
   let(:expected_credentials) { default_credentials }
+  let(:facts) { default_facts }
 
   before(:each) do
     mock_settings_file(settings_hash)
+    allow(processor).to receive(:facts).and_return(facts)
   end
 
   it 'sends a node_report event' do
@@ -22,6 +24,9 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).to match(%r{Resource Statuses:\s\/foo\/bar\/message: defined 'message' as 'hello'})
       expect(actual_event['description']).to match(%r{Resource Definition: site.pp:1})
+      expect(actual_event['description']).to match(%r{== Facts ==})
+      expect(actual_event['description']).to match(%r{id: foo})
+      expect(actual_event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
@@ -60,6 +65,7 @@ describe 'ServiceNow report processor: event_management mode' do
           before(:each) do
             [processor_one, processor_two].each do |processor|
               allow(processor).to receive(:status).and_return('changed')
+              allow(processor).to receive(:facts).and_return(facts)
               mock_events(processor, new_mock_event(status: 'success', corrective_change: false))
             end
           end
@@ -71,6 +77,7 @@ describe 'ServiceNow report processor: event_management mode' do
           before(:each) do
             [processor_one, processor_two].each do |processor|
               allow(processor).to receive(:status).and_return('changed')
+              allow(processor).to receive(:facts).and_return(facts)
             end
 
             events = [
@@ -90,6 +97,7 @@ describe 'ServiceNow report processor: event_management mode' do
           before(:each) do
             [processor_one, processor_two].each do |processor|
               mock_events(processor, new_mock_event(status: 'failure'))
+              allow(processor).to receive(:facts).and_return(facts)
             end
 
             allow(processor_one).to receive(:status).and_return('failed')
@@ -103,6 +111,7 @@ describe 'ServiceNow report processor: event_management mode' do
           before(:each) do
             [processor_one, processor_two].each do |processor|
               allow(processor).to receive(:status).and_return('changed')
+              allow(processor).to receive(:facts).and_return(facts)
             end
 
             mock_events(processor_one, new_mock_event(status: 'failure'))
@@ -124,6 +133,7 @@ describe 'ServiceNow report processor: event_management mode' do
 
         [processor_one, processor_two].each do |processor|
           mock_events(processor)
+          allow(processor).to receive(:facts).and_return(facts)
         end
       end
 

@@ -103,7 +103,7 @@ module Puppet::Util::Servicenow
       resource.events.each do |event|
         resource_summary << "#{['', resource.containment_path, "#{event.property}: #{event.message}"].flatten.join('/')}\n"
       end
-      resource_summary << "  Resource Definition: #{resource.file}:#{resource.line}\n\n"
+      resource_summary << "  Resource Definition: #{resource.file}:#{resource.line}\n"
       summary << resource_summary
     end
     summary
@@ -192,9 +192,48 @@ module Puppet::Util::Servicenow
     # best and most stable solution we can do (for now) is the description you see here.
     description = "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
     description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
+    description << "\n\n== Facts ==\n#{selected_facts(settings_hash)}"
     description
   end
   module_function :report_description
+
+  def facts
+    # This is a cheat to make it easier to do test mocks.
+    Puppet::Node::Facts.indirection.find(host).values
+  end
+
+  def selected_facts(settings_hash, facts_query = nil, format = nil)
+    include_facts = facts_query.nil? ? settings_hash['include_facts'] : facts_query
+    output_format = format.nil? ? settings_hash['facts_format'].to_sym : format.to_sym
+
+    selected_facts = {}
+
+    if [include_facts].flatten.first == 'all'
+      facts
+    else
+      include_facts.each do |name|
+        value = facts.dig(*name.split('.'))
+        selected_facts[name] = value unless value.nil?
+      end
+    end
+
+    # json and object are primarily to support either internal uses like further
+    # processing on selected facts, or giving to the facts to a machine
+    # processor like an event engine.
+    case output_format
+    when :yaml
+      selected_facts.to_yaml
+    when :pretty_json
+      JSON.pretty_generate(selected_facts)
+    when :json
+      selected_facts.to_json
+    when :object
+      selected_facts
+    else
+      selected_facts
+    end
+  end
+  module_function :selected_facts
 
   def format_report_timestamp(time, metrics)
     total_time = time + metrics['time']['total']
