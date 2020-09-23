@@ -22,7 +22,7 @@ Puppet::Reports.register_report(:servicenow) do
   def process_event_management(settings_hash)
     event_data = {
       'source'      => 'Puppet',
-      'type'        => 'node_report',
+      'type'        => "node_report_#{status}",
       # 5           => 'OK' severity
       'severity'    => calculate_event_severity(resource_statuses, settings_hash).to_s,
       'node'        => host,
