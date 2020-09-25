@@ -10,6 +10,7 @@ def new_processor
 
   allow(processor).to receive(:time).and_return '00:00:00'
   allow(processor).to receive(:host).and_return 'host'
+  allow(processor).to receive(:environment).and_return 'production'
   allow(processor).to receive(:job_id).and_return '1'
   allow(processor).to receive(:time).and_return(Time.now)
   allow(processor).to receive(:metrics).and_return('time' => { 'total' => 0 })
@@ -135,7 +136,7 @@ def short_description_regex(status)
   # Since the formatted time string is regex only precise to the minute, the unit tests
   # execute fast enough that race conditions and intermittent failures shouldn't
   # be a problem.
-  Regexp.new(%r{Puppet.*#{Regexp.escape(status)}.*#{processor.host} \(report time: #{Time.now.strftime('%F %H:%M')}.*\)})
+  Regexp.new(%r{Puppet.*#{Regexp.escape(status)}.*#{processor.host}.*.*#{processor.environment}.*\(report time: #{Time.now.strftime('%F %H:%M')}.*\)})
 end
 
 def default_facts

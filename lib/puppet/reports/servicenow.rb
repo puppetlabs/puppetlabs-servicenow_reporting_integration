@@ -82,7 +82,7 @@ Puppet::Reports.register_report(:servicenow) do
 
     short_description_status = noop_pending ? 'pending changes' : status
     incident_data = {
-      short_description: "Puppet run report (status: #{short_description_status}) for node #{host} (report time: #{format_report_timestamp(time, metrics)})",
+      short_description: "Puppet run report (status: #{short_description_status}) for node #{host} environment #{environment} (report time: #{format_report_timestamp(time, metrics)})",
       description: report_description(settings_hash, resource_statuses),
       caller_id: settings_hash['caller_id'],
       category: settings_hash['category'],

@@ -24,6 +24,7 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).to match(%r{Resource Statuses:\s\/foo\/bar\/message: defined 'message' as 'hello'})
       expect(actual_event['description']).to match(%r{Resource Definition: site.pp:1})
+      expect(actual_event['description']).to match(%r{Environment: production})
       expect(actual_event['description']).to match(%r{== Facts ==})
       expect(actual_event['description']).to match(%r{id: foo})
       expect(actual_event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
