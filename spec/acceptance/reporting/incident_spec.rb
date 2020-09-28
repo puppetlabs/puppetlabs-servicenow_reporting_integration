@@ -120,6 +120,7 @@ describe 'ServiceNow reporting: incident creation' do
               expect(incident['description']).to match(%r{site.pp:2})
               expect(incident['description']).to match(%r{Notify\[foo_intentional_change\]\/message:})
               expect(incident['description']).to match(%r{site.pp:6})
+              expect(incident['description']).to match(%r{Environment: production})
               expect(incident['description']).to match(%r{Report Labels:})
               expect(incident['description']).to match(%r{corrective_changes})
               expect(incident['description']).to match(%r{intentional_changes})

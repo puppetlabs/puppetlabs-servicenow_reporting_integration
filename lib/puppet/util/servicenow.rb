@@ -193,6 +193,7 @@ module Puppet::Util::Servicenow
     # best and most stable solution we can do (for now) is the description you see here.
     description = "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
     description << "\n\n#{labels}" unless labels.nil?
+    description << "\n\nEnvironment: #{environment}"
     description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
     description << "\n\n== Facts ==\n#{selected_facts(settings_hash)}"
     description
