@@ -31,6 +31,7 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{Report Labels:[\s\S]*intentional_changes})
       expect(actual_event['additional_info']).to match(%r{"facts"})
       expect(actual_event['additional_info']).to match(%r{"id": "foo"})
+      expect(actual_event['additional_info']).to match(%r{"environment": "production})
       expect(actual_event['additional_info']).to match(%r{"ipaddress": "192.168.0.1"})
       expect(actual_event['additional_info']).to match(%r{"memorysize": "7.80 GiB"})
       expect(actual_event['additional_info']).to match(%r{"memoryfree": "2.05 GiB"})

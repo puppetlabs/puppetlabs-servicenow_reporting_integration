@@ -37,6 +37,7 @@ describe 'ServiceNow reporting: event management' do
     expect(event['description']).to match(%r{id: root})
     expect(event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
     expect(event['additional_info']).to match(%r{"facts"})
+    expect(event['additional_info']).to match(%r{"environment": "production})
     expect(event['additional_info']).to match(%r{"chassistype": "Other"})
     expect(event['additional_info']).to match(%r{"manufacturer": "VMware, Inc."})
     expect(event['additional_info']).to match(%r{"domain": "delivery.puppetlabs.net"})

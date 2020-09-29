@@ -243,6 +243,7 @@ module Puppet::Util::Servicenow
     # If we wish to add other top level keys to the additional information field, add them here.
     # Include all facts since this field is not intended for humans.
     additional_information['facts'] = facts
+    additional_information['environment'] = environment
     JSON.pretty_generate(additional_information)
   end
   module_function :event_additional_information
