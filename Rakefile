@@ -174,6 +174,22 @@ namespace :acceptance do
     Rake::Task['litmus:install_module'].invoke(master.uri)
   end
 
+  desc 'Reloads puppetserver on the master'
+  task :reload_module do
+    result = master.run_shell('/opt/puppetlabs/bin/puppetserver reload').stdout.chomp
+    puts "Error: #{result}" unless result.nil?
+  end
+
+  desc 'Gets the puppetserver logs for service now'
+  task :get_logs do
+    puts master.run_shell('tail -500 /var/log/puppetlabs/puppetserver/puppetserver.log').stdout.chomp
+  end
+
+  desc 'Do an agent run'
+  task :agent_run do
+    puts master.run_shell('puppet agent -t').stdout.chomp
+  end
+
   desc 'Runs the tests'
   task :run_tests do
     rspec_command  = 'bundle exec rspec ./spec/acceptance --format documentation'
@@ -201,7 +217,6 @@ namespace :acceptance do
       puts("")
     end
   end
-
 
   desc 'Teardown the setup'
   task :tear_down do
