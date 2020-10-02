@@ -23,12 +23,12 @@ Puppet::Reports.register_report(:servicenow) do
     event_data = {
       'source'          => 'Puppet',
       'type'            => "node_report_#{status}",
-      'severity'        => calculate_event_severity(resource_statuses, settings_hash).to_s,
+      'severity'        => calculate_event_severity(resource_statuses, settings_hash, transaction_completed).to_s,
       'node'            => host,
       # Source Instance is sent as event_class in the api
       # PuppetDB uses Puppet[:node_name_value] to determine the server name so this should be fine.
       'event_class'     => Puppet[:node_name_value],
-      'description'     => report_description(settings_hash, resource_statuses),
+      'description'     => report_description(settings_hash, resource_statuses, transaction_completed),
       'additional_info' => event_additional_information(settings_hash),
     }
 
@@ -72,7 +72,7 @@ Puppet::Reports.register_report(:servicenow) do
 
     Puppet.info(sn_log_entry("incident creation conditions: #{incident_creation_conditions}"))
 
-    satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, incident_creation_conditions)
+    satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, incident_creation_conditions, transaction_completed)
 
     if satisfied_conditions.empty?
       Puppet.info(sn_log_entry('decision: Do not create incident'))
@@ -83,7 +83,7 @@ Puppet::Reports.register_report(:servicenow) do
     short_description_status = noop_pending ? 'pending changes' : status
     incident_data = {
       short_description: "Puppet run report (status: #{short_description_status}) for node #{host} environment #{environment} (report time: #{format_report_timestamp(time, metrics)})",
-      description: report_description(settings_hash, resource_statuses),
+      description: report_description(settings_hash, resource_statuses, transaction_completed),
       caller_id: settings_hash['caller_id'],
       category: settings_hash['category'],
       subcategory: settings_hash['subcategory'],

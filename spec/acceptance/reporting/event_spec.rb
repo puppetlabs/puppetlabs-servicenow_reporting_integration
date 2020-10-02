@@ -45,4 +45,15 @@ describe 'ServiceNow reporting: event management' do
     # Check that the PE console URL is included
     expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
   end
+
+  it 'handles a catalog failure properly' do
+    set_sitepp_content("notify {'foo")
+    trigger_puppet_run(master, acceptable_exit_codes: [1])
+    set_sitepp_content('')
+    event = Helpers.get_single_record('em_event', query)
+
+    expect(event['description']).to match(%r{Report Labels:[\s\S]*catalog_failure})
+    expect(event['description']).to match(%r{Log Output:})
+    expect(event['type']).to eql('node_report_failed')
+  end
 end
