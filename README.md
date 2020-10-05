@@ -24,7 +24,7 @@ The module can send events or it can create incidents, but attempting to do both
 
 ### Events
 
-To send events, classify your Puppet servers with the `servicenow_reporting_integration::event_management` class. The minimum parameters you need to configure for the class to work are instance (the fqdn of the servicenow instance, not including the protocol e.g. https://), and then user and password, or you can bypass username/password authentication and use an oauth token using the oauth_token parameter.
+To send events, classify your Puppet servers with the `servicenow_reporting_integration::event_management` class. The minimum parameters you need to configure for the class to work are instance (the fqdn of the servicenow instance), and then user and password, or you can bypass username/password authentication and use an oauth token using the oauth_token parameter.
 
 By default each event will include the following information:
 * __Source__: Puppet

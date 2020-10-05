@@ -3,7 +3,7 @@
 # @example
 #   include servicenow_reporting_integration::event_management
 # @param [String[1]] instance
-#   The FQDN of the ServiceNow instance. Only the FQDN. Do not include the protocol
+#   The FQDN of the ServiceNow instance.
 # @param [Optional[String[1]]] user
 #   A user that has permission to send events
 # @param [Optional[String[1]]] password
