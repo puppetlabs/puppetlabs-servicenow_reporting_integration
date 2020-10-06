@@ -238,12 +238,12 @@ module Puppet::Util::Servicenow
   end
   module_function :selected_facts
 
-  def event_additional_information
+  def event_additional_information(settings_hash)
     additional_information = {}
     # If we wish to add other top level keys to the additional information field, add them here.
     # Include all facts since this field is not intended for humans.
-    additional_information['facts'] = facts
     additional_information['environment'] = environment
+    additional_information.merge!(selected_facts(settings_hash, nil, :object))
     JSON.pretty_generate(additional_information)
   end
   module_function :event_additional_information

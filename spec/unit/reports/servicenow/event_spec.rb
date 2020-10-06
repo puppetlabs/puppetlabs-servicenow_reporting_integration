@@ -17,6 +17,7 @@ describe 'ServiceNow report processor: event_management mode' do
     mock_event_as_resource_status(processor, 'success', false)
 
     expect_sent_event(expected_credentials) do |actual_event|
+      additional_info = JSON.parse(actual_event['additional_info'])
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report_changed')
       expect(actual_event['severity']).to eql('1')
@@ -29,12 +30,10 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(actual_event['description']).to match(%r{id: foo})
       expect(actual_event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
       expect(actual_event['description']).to match(%r{Report Labels:[\s\S]*intentional_changes})
-      expect(actual_event['additional_info']).to match(%r{"facts"})
-      expect(actual_event['additional_info']).to match(%r{"id": "foo"})
-      expect(actual_event['additional_info']).to match(%r{"environment": "production})
-      expect(actual_event['additional_info']).to match(%r{"ipaddress": "192.168.0.1"})
-      expect(actual_event['additional_info']).to match(%r{"memorysize": "7.80 GiB"})
-      expect(actual_event['additional_info']).to match(%r{"memoryfree": "2.05 GiB"})
+      expect(additional_info['id']).to eql('foo')
+      expect(additional_info['environment']).to eql('production')
+      expect(additional_info['ipaddress']).to eql('192.168.0.1')
+      expect(additional_info['os.distro']['codename']).to eql('xenial')
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
@@ -89,14 +88,18 @@ describe 'ServiceNow report processor: event_management mode' do
     mock_event_as_resource_status(processor, 'success', false, false)
 
     expect_sent_event(expected_credentials) do |actual_event|
+      additional_info = JSON.parse(actual_event['additional_info'])
+
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report_unchanged')
       expect(actual_event['severity']).to eql('1')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).not_to match(%r{Resource Statuses:})
-      expect(actual_event['additional_info']).to match(%r{"facts"})
-      expect(actual_event['additional_info']).to match(%r{"id": "foo"})
+      expect(additional_info['id']).to eql('foo')
+      expect(additional_info['environment']).to eql('production')
+      expect(additional_info['ipaddress']).to eql('192.168.0.1')
+      expect(additional_info['os.distro']['codename']).to eql('xenial')
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
