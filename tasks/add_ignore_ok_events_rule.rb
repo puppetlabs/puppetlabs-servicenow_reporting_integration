@@ -30,7 +30,7 @@ class ServiceNowEventRuleCreate < TaskHelper
     oauth_token = _target[:oauth_token] if oauth_token.nil?
     instance    = _target[:uri]         if instance.nil?
 
-    uri = "https://#{instance}/api/now/table/em_match_rule"
+    uri = "#{instance_with_protocol(instance)}/api/now/table/em_match_rule"
 
     begin
       response = Puppet::Util::Servicenow.do_snow_request(uri,

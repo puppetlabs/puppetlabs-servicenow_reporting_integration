@@ -293,3 +293,12 @@ def report_labels(resource_statuses)
   "Report Labels:\n"\
   "#{labels.join("\n")}"
 end
+
+# takes the instance string from the settings and prepends 'https://' if not already present.
+def instance_with_protocol(instance)
+  if instance[0..7] == 'https://'
+    instance
+  else
+    'https://' << instance
+  end
+end

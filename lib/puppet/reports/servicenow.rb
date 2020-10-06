@@ -45,7 +45,7 @@ Puppet::Reports.register_report(:servicenow) do
     event_data['message_key'] = Digest::SHA1.hexdigest(message_key_hash.to_json.chars.sort.join)
 
     # Now send the event
-    endpoint = "https://#{settings_hash['instance']}/api/global/em/jsonv2"
+    endpoint = "#{instance_with_protocol(settings_hash['instance'])}/api/global/em/jsonv2"
 
     Puppet.info(sn_log_entry("attempting to send the #{event_data['type']} event on #{endpoint}"))
 
@@ -95,7 +95,7 @@ Puppet::Reports.register_report(:servicenow) do
       assigned_to: settings_hash['assigned_to'],
     }
 
-    endpoint = "https://#{settings_hash['instance']}/api/now/table/incident"
+    endpoint = "#{instance_with_protocol(settings_hash['instance'])}/api/now/table/incident"
 
     Puppet.info(sn_log_entry("attempting to create incident on #{endpoint}"))
 

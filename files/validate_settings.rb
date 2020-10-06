@@ -37,7 +37,7 @@ end
 
 # Validate the ServiceNow credentials
 begin
-  endpoint = "https://#{settings['instance']}/api/now/table/#{validation_table}?sysparm_limit=1"
+  endpoint = "#{instance_with_protocol(settings['instance'])}/api/now/table/#{validation_table}?sysparm_limit=1"
   response = Puppet::Util::Servicenow.do_snow_request(
     endpoint,
     'Get',
