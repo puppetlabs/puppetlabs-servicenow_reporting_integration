@@ -45,7 +45,7 @@ def default_settings_hash
     'pending_intentional_changes_event_severity' => 1,
     'no_changes_event_severity'                  => 5000,
     'facts_format'                               => 'yaml',
-    'include_facts'                              => ['id', 'os.distro'],
+    'include_facts'                              => ['id', 'os.distro', 'ipaddress'],
   }
 end
 
