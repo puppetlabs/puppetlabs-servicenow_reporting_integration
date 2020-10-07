@@ -29,7 +29,7 @@ Puppet::Reports.register_report(:servicenow) do
       # PuppetDB uses Puppet[:node_name_value] to determine the server name so this should be fine.
       'event_class'     => Puppet[:node_name_value],
       'description'     => report_description(settings_hash, resource_statuses, transaction_completed),
-      'additional_info' => event_additional_information(settings_hash),
+      'additional_info' => event_additional_information(settings_hash, resource_statuses, transaction_completed),
     }
 
     # Compute the message key hash, which contains all relevant information

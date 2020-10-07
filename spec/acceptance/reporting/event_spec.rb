@@ -20,7 +20,6 @@ describe 'ServiceNow reporting: event management' do
     set_sitepp_content(declare('notify', 'foo'))
     trigger_puppet_run(master, acceptable_exit_codes: [2])
     event = Helpers.get_single_record('em_event', query)
-
     additional_info = JSON.parse(event['additional_info'])
 
     expect(event['source']).to eql('Puppet')
@@ -42,6 +41,7 @@ describe 'ServiceNow reporting: event management' do
     expect(additional_info['id']).to eql('root')
     expect(additional_info['ipaddress']).to match(%r{^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$})
     expect(additional_info['os.distro']['codename']).not_to be_empty
+    expect(additional_info['report_labels']).to eql('intentional_changes')
     # Check that the PE console URL is included
     expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
   end

@@ -201,7 +201,7 @@ module Puppet::Util::Servicenow
 
   def report_description(settings_hash, resource_statuses, transaction_completed)
     resourse_status_summary = human_readable_event_summary(resource_statuses)
-    labels                  = report_labels(resource_statuses, transaction_completed)
+    labels                  = description_report_labels(resource_statuses, transaction_completed)
     # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
     # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
     # best and most stable solution we can do (for now) is the description you see here.
@@ -253,11 +253,12 @@ module Puppet::Util::Servicenow
   end
   module_function :selected_facts
 
-  def event_additional_information(settings_hash)
+  def event_additional_information(settings_hash, resource_statuses, transaction_completed)
     additional_information = {}
     # If we wish to add other top level keys to the additional information field, add them here.
     # Include all facts since this field is not intended for humans.
     additional_information['environment'] = environment
+    additional_information['report_labels'] = additional_info_report_labels(resource_statuses, transaction_completed)
     additional_information.merge!(selected_facts(settings_hash, nil, :object))
     JSON.pretty_generate(additional_information)
   end
@@ -302,12 +303,24 @@ module Puppet::Util::Servicenow
 
   def report_labels(resource_statuses, transaction_completed)
     event_conditions = calculate_event_conditions(resource_statuses).select { |_, present| present == true }
-    labels = event_conditions.keys.map { |condition| "  #{condition}" }
+    labels = event_conditions.keys
     labels << 'catalog_failure' if catalog_compilation_failure?(resource_statuses, transaction_completed)
-
-    "Report Labels:\n\t#{labels.join("\n\t")}" unless labels.empty?
+    labels
   end
   module_function :report_labels
+
+  def description_report_labels(resource_statuses, transaction_completed)
+    labels = report_labels(resource_statuses, transaction_completed)
+    labels.map! { |condition| "  #{condition}" }
+    "Report Labels:\n\t#{labels.join("\n\t")}" unless labels.empty?
+  end
+  module_function :description_report_labels
+
+  def additional_info_report_labels(resource_statuses, transaction_completed)
+    labels = report_labels(resource_statuses, transaction_completed)
+    labels.join(', ')
+  end
+  module_function :additional_info_report_labels
 
   def log_messages
     logs.map { |entry| entry.message }.join("\n")
