@@ -134,11 +134,12 @@ module Puppet::Util::Servicenow
         event_conditions[change_condition] = true
       end
     end
+
     event_conditions
   end
   module_function :calculate_event_conditions
 
-  def calculate_event_severity(resource_statuses, settings_hash)
+  def calculate_event_severity(resource_statuses, settings_hash, transaction_completed)
     # https://docs.servicenow.com/bundle/paris-it-operations-management/page/product/event-management-operator/concept/operator-events-alerts.html
     # 0 => Clear....(The alert no longer needs action.)
     # 1 => OK.......(No severity. An alert is created. The resource is still functional.)
@@ -148,6 +149,7 @@ module Puppet::Util::Servicenow
     # 5 => Critical.(The resource is either not functional or critical problems are imminent.)
     event_conditions = calculate_event_conditions(resource_statuses)
     # return no_changes_event_severity in the case that there are no changes
+    return settings_hash['failures_event_severity'] if catalog_compilation_failure?(resource_statuses, transaction_completed)
     return settings_hash['no_changes_event_severity'] unless event_conditions.values.any?
     event_conditions.select { |_, exists| exists == true }
                     .map { |condition, _| settings_hash[condition + '_event_severity'] }.sort.first
@@ -156,7 +158,7 @@ module Puppet::Util::Servicenow
 
   # Returns an array of satisfied conditions
   # Note that the 'never' condition will be overridden by any other valid condition
-  def calculate_satisfied_conditions(report_status, resource_statuses, incident_creation_conditions)
+  def calculate_satisfied_conditions(report_status, resource_statuses, incident_creation_conditions, transaction_completed)
     # Some incident creation conditions depend on the resource events. Thus, we go ahead
     # and evaluate these 'event' conditions _before_ evaluating the incident creation
     # conditions so we can iterate through the resource events only once. This results in
@@ -171,7 +173,7 @@ module Puppet::Util::Servicenow
       elsif condition == 'never'
         false
       elsif condition == 'failures'
-        report_status == 'failed'
+        report_status == 'failed' || catalog_compilation_failure?(resource_statuses, transaction_completed)
       elsif event_conditions.key?(condition)
         event_conditions[condition]
       else
@@ -185,9 +187,9 @@ module Puppet::Util::Servicenow
   end
   module_function :calculate_satisfied_conditions
 
-  def report_description(settings_hash, resource_statuses)
+  def report_description(settings_hash, resource_statuses, transaction_completed)
     resourse_status_summary = human_readable_event_summary(resource_statuses)
-    labels                  = report_labels(resource_statuses)
+    labels                  = report_labels(resource_statuses, transaction_completed)
     # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
     # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
     # best and most stable solution we can do (for now) is the description you see here.
@@ -195,6 +197,7 @@ module Puppet::Util::Servicenow
     description << "\n\n#{labels}" unless labels.nil?
     description << "\n\nEnvironment: #{environment}"
     description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
+    description << "\n\nLog Output:\n#{log_messages}" if catalog_compilation_failure?(resource_statuses, transaction_completed)
     description << "\n\n== Facts ==\n#{selected_facts(settings_hash)}"
     description
   end
@@ -284,14 +287,25 @@ module Puppet::Util::Servicenow
     report_message_key_hash
   end
   module_function :calculate_report_message_key_hash
-end
 
-def report_labels(resource_statuses)
-  event_conditions = calculate_event_conditions(resource_statuses).select { |_, present| present == true }
-  labels = event_conditions.keys.map { |condition| "  #{condition}" }
+  def report_labels(resource_statuses, transaction_completed)
+    event_conditions = calculate_event_conditions(resource_statuses).select { |_, present| present == true }
+    labels = event_conditions.keys.map { |condition| "  #{condition}" }
+    labels << 'catalog_failure' if catalog_compilation_failure?(resource_statuses, transaction_completed)
 
-  "Report Labels:\n"\
-  "#{labels.join("\n")}"
+    "Report Labels:\n\t#{labels.join("\n\t")}" unless labels.empty?
+  end
+  module_function :report_labels
+
+  def log_messages
+    logs.map { |entry| entry.message }.join("\n")
+  end
+  module_function :log_messages
+
+  def catalog_compilation_failure?(resource_statuses, transaction_completed)
+    resource_statuses.empty? && !transaction_completed
+  end
+  module_function :catalog_compilation_failure?
 end
 
 # takes the instance string from the settings and prepends 'https://' if not already present.
