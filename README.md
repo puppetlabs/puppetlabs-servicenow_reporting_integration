@@ -54,6 +54,8 @@ You can specify the set of facts included in the event description via the `incl
 
 Facts in the description by default are in Yaml format for readability, but this can be changed via the `facts_format` parameter to one of yaml, pretty_json (json with readability line breaks and indentation), or json.
 
+To stop the module from sending any events to Servicenow, you can set the `disabled` parameter to `true`. Simply removing the module from classification on a Puppet server node will not stop the report processor from continuing to send events to Servicenow. To remove the integration permanently, uninstall the module from the environment and remove `servicenow` from the `reports` setting in `puppet.conf`.
+
 ### Incidents
 
 To send incidents, classify your Puppet server nodes with the `servicenow_reporting_integration::incident_mangement` class. The minimum parameters you need to configure for the class to work are instance (the fqdn of the servicenow instance, not including the protocol e.g. https://), and then user and password, or you can bypass username/password authentication and use an oauth token using the oauth_token parameter. Lastly you will need to get the sys_id of the user you would like to use as the ‘Caller’ for each ticket. Look below in the ‘How To’ section if you don’t already know how to get a user sys_id. The `servicenow_reporting_integration::incident_management` class requires the `caller_id` because that is a required incident field on ServiceNow’s end. 

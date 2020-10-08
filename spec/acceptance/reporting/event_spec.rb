@@ -56,4 +56,13 @@ describe 'ServiceNow reporting: event management' do
     expect(event['description']).to match(%r{Log Output:})
     expect(event['type']).to eql('node_report_failed')
   end
+
+  context 'when disabled' do
+    let(:params) { super().merge('disabled' => true) }
+
+    it 'does not send an event' do
+      trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+  end
 end

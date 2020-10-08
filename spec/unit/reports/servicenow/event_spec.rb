@@ -62,6 +62,15 @@ describe 'ServiceNow report processor: event_management mode' do
     processor.process
   end
 
+  context 'when disabled' do
+    let(:settings_hash) { super().merge('disabled' => true) }
+
+    it 'does not send an event' do
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
   it 'sends a node_report_failure' do
     allow(processor).to receive(:status).and_return 'failure'
     allow(processor).to receive(:host).and_return 'fqdn'
