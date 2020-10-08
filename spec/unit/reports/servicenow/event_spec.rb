@@ -20,7 +20,7 @@ describe 'ServiceNow report processor: event_management mode' do
       additional_info = JSON.parse(actual_event['additional_info'])
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report_changed')
-      expect(actual_event['severity']).to eql('1')
+      expect(actual_event['severity']).to eql('5')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).to match(%r{Resource Statuses:\s\/foo\/bar\/message: defined 'message' as 'hello'})
@@ -50,7 +50,7 @@ describe 'ServiceNow report processor: event_management mode' do
     expect_sent_event(expected_credentials) do |actual_event|
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report_changed')
-      expect(actual_event['severity']).to eql('1')
+      expect(actual_event['severity']).to eql('5')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).not_to match(%r{Resource Statuses:})
@@ -92,7 +92,7 @@ describe 'ServiceNow report processor: event_management mode' do
 
       expect(actual_event['source']).to eql('Puppet')
       expect(actual_event['type']).to eql('node_report_unchanged')
-      expect(actual_event['severity']).to eql('1')
+      expect(actual_event['severity']).to eql('5')
       expect(actual_event['node']).to eql('fqdn')
       expect(actual_event['description']).to match(%r{test_console})
       expect(actual_event['description']).not_to match(%r{Resource Statuses:})
@@ -209,12 +209,12 @@ describe 'ServiceNow report processor: event_management mode' do
   end
 
   context 'sends the appropriate event severity' do
-    examples = [{ status: 'failure', event_corrective_change: false, expected_severity: '3',    status_changed: true,  status_failed: false },
-                { status: 'success', event_corrective_change: true,  expected_severity: '2',    status_changed: true,  status_failed: false },
-                { status: 'noop',    event_corrective_change: true,  expected_severity: '2',    status_changed: true,  status_failed: false },
-                { status: 'success', event_corrective_change: false, expected_severity: '1',    status_changed: true,  status_failed: false },
-                { status: 'noop',    event_corrective_change: false, expected_severity: '1',    status_changed: true,  status_failed: false },
-                { status: 'audit',   event_corrective_change: false, expected_severity: '5000', status_changed: false, status_failed: false }]
+    examples = [{ status: 'failure', event_corrective_change: false, expected_severity: '3', status_changed: true, status_failed: false },
+                { status: 'success', event_corrective_change: true,  expected_severity: '4', status_changed: true, status_failed: false },
+                { status: 'noop',    event_corrective_change: true,  expected_severity: '4', status_changed: true, status_failed: false },
+                { status: 'success', event_corrective_change: false, expected_severity: '5', status_changed: true, status_failed: false },
+                { status: 'noop',    event_corrective_change: false, expected_severity: '5', status_changed: true, status_failed: false },
+                { status: 'audit',   event_corrective_change: false, expected_severity: '5', status_changed: false, status_failed: false }]
 
     examples.each do |example|
       include_examples 'event severity levels', example

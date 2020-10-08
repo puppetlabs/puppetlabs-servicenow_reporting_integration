@@ -19,7 +19,6 @@ def new_processor
   allow(Puppet).to receive(:err) do |msg|
     raise msg
   end
-
   processor
 end
 
@@ -38,12 +37,12 @@ def default_settings_hash
     'user'                                       => 'test_user',
     'password'                                   => 'test_password',
     'oauth_token'                                => 'test_token',
-    'failures_event_severity'                    => 3,
-    'corrective_changes_event_severity'          => 2,
-    'intentional_changes_event_severity'         => 1,
-    'pending_corrective_changes_event_severity'  => 2,
-    'pending_intentional_changes_event_severity' => 1,
-    'no_changes_event_severity'                  => 5000,
+    'failures_event_severity'                    => 'Minor',
+    'corrective_changes_event_severity'          => 'Warning',
+    'intentional_changes_event_severity'         => 'OK',
+    'pending_corrective_changes_event_severity'  => 'Warning',
+    'pending_intentional_changes_event_severity' => 'OK',
+    'no_changes_event_severity'                  => 'OK',
     'facts_format'                               => 'yaml',
     'include_facts'                              => ['id', 'os.distro', 'ipaddress'],
   }
