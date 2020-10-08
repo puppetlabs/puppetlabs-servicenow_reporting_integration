@@ -22,6 +22,7 @@
       Optional[Servicenow_reporting_integration::Severity_levels] $no_changes_event_severity,
       Array[String] $include_facts,
       String $facts_format,
+      Optional[Boolean] $disabled,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_version,
@@ -52,4 +53,5 @@ pending_intentional_changes_event_severity: <%= $pending_intentional_changes_eve
 no_changes_event_severity: <%= $no_changes_event_severity %>
 include_facts: <%= $include_facts %>
 facts_format: <%= $facts_format %>
+disabled: <%= $disabled %>
 report_processor_version: <%= $report_processor_version %>

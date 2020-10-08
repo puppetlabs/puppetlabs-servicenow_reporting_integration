@@ -49,6 +49,7 @@ class servicenow_reporting_integration::event_management (
   Optional[Servicenow_reporting_integration::Severity_levels] $no_changes_event_severity                      = 'OK',
   Optional[Array[String[1]]] $include_facts                           = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                   = 'yaml',
+  Optional[Boolean] $disabled                                         = false,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
@@ -66,5 +67,6 @@ class servicenow_reporting_integration::event_management (
     no_changes_event_severity                  => $no_changes_event_severity,
     include_facts                              => $include_facts,
     facts_format                               => $facts_format,
+    disabled                                   => $disabled,
   }
 }

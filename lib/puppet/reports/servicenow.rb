@@ -10,7 +10,7 @@ Puppet::Reports.register_report(:servicenow) do
 
     case settings_hash['operation_mode']
     when 'event_management'
-      process_event_management(settings_hash)
+      process_event_management(settings_hash) unless settings_hash['disabled']
     else
       # default to incident management
       process_incident_management(settings_hash)
