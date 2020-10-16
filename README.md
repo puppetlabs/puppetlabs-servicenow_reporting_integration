@@ -89,6 +89,8 @@ Each incident will include the following information provided by Puppet:
 
 To verify that everything worked, trigger a Puppet run on one of the nodes in the `PE Master` node group then log into the node. Once logged in, run `sudo tail -n 60 /var/log/puppetlabs/puppetserver/puppetserver.log | grep servicenow`. You should see some output. If not, then the class is probably not being classified properly. Either the class is not being assigned to the Puppet server nodes at all, or there may be catalog compilation errors on those nodes with the provided parameter values. Please use GitHub issues to file any bugs you find during your troubleshooting.
 
+If you try to use the module and it doesn't work because of certificate validation errors, you can use the `skip_certificate_validation` parameter to disable certificate validation. The connection will still be SSL encrypted, but no certificate validation will be performed, which opens up a risk of 'Man in the middle' attacks. But, if you are using an internally hosted Servicenow instance that uses an SSL certificate that has not been imported for trust on the Puppet server machine, this may be necessary. Cloud hosted instances of Servicenow typically use a certificate signed by a well know public certificate authority, in which case, this parameter is not necessary.
+
 ## Development
 
 ### Unit tests

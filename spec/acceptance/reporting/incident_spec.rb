@@ -30,6 +30,7 @@ describe 'ServiceNow reporting: incident creation' do
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: servicenow_config['password'],
+      skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end
   let(:setup_manifest) do

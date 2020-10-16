@@ -14,12 +14,14 @@ settings = Puppet::Util::Servicenow.settings(temporary_settings_file_path)
 # Validate the PE console URL
 begin
   pe_console_url = settings['pe_console_url']
+  cert = `puppet config print localcacert`.chomp
   # The /auth/favicon.ico endpoint is a stable PE console endpoint
   uri = URI.parse("#{pe_console_url}/auth/favicon.ico")
   response = Net::HTTP.start(uri.host,
                              uri.port,
                              use_ssl: uri.scheme == 'https',
-                             verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
+                             verify_mode: OpenSSL::SSL::VERIFY_PEER,
+                             ca_file: cert) do |http|
     request = Net::HTTP::Get.new(uri)
     http.request(request)
   end
@@ -45,6 +47,7 @@ begin
     user: settings['user'],
     password: settings['password'],
     oauth_token: settings['oauth_token'],
+    skip_cert_check: settings['skip_certificate_validation'],
   )
   status_code = response.code.to_i
   if status_code >= 400

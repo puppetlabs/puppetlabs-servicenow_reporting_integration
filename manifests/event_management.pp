@@ -37,6 +37,11 @@
 #   Turn off sending events from the report processor. This is an easier way to
 #   disable the module temporarily instead of uninstalling the module and
 #   removing the setting from puppet.conf.
+# @param [Optional[Boolean]] skip_certificate_validation
+#   If your Servicenow instance uses a certificate that is not trusted by the
+#   Puppet server, you can set this parameter to 'true'. The connection will
+#   still use SSL, but the module will not perform certificate validation, which
+#   is a risk for man in the middle attacks.
 
 class servicenow_reporting_integration::event_management (
   String[1] $instance,
@@ -54,6 +59,7 @@ class servicenow_reporting_integration::event_management (
   Optional[Array[String[1]]] $include_facts                                                               = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                                       = 'yaml',
   Optional[Boolean] $disabled                                                                             = false,
+  Optional[Boolean] $skip_certificate_validation                                                          = false,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
@@ -72,5 +78,6 @@ class servicenow_reporting_integration::event_management (
     include_facts                              => $include_facts,
     facts_format                               => $facts_format,
     disabled                                   => $disabled,
+    skip_certificate_validation                => $skip_certificate_validation,
   }
 }

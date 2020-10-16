@@ -124,4 +124,12 @@ module Helpers
     end
   end
   module_function :delete_records
+
+  def skip_cert_check?
+    # If the uri for the servicenow instance is just the uri for the master with
+    # the port at the end, then we assume that it's just the container.
+    # The container uses a self signed cert, so we have to skip the cert check.
+    servicenow_instance.uri.include? master.uri
+  end
+  module_function :skip_cert_check?
 end

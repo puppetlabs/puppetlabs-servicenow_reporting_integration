@@ -16,6 +16,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: servicenow_config['password'],
+      skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end
   let(:setup_manifest) do
@@ -170,6 +171,19 @@ describe 'ServiceNow reporting: miscellaneous tests' do
         master.apply_manifest(setup_manifest, catch_failures: true)
         reports_setting = master.run_shell('puppet config print reports --section master').stdout.chomp
         expect(reports_setting).to match(%r{servicenow})
+      end
+    end
+  end
+
+  context 'module fails against container if cert validation on', if: Helpers.skip_cert_check? do
+    let(:params) do
+      super().merge(skip_certificate_validation: false, incident_creation_conditions: ['always'])
+    end
+
+    it 'certificate validation fails' do
+      master.apply_manifest(setup_manifest, expect_failures: true) do |failure|
+        expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
+        expect(failure['stderr']).to match(%r{SSL_connect returned=1})
       end
     end
   end
