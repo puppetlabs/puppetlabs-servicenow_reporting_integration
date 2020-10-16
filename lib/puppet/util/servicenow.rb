@@ -71,13 +71,18 @@ module Puppet::Util::Servicenow
   end
   module_function :settings
 
-  def do_snow_request(uri, http_verb, body, user: nil, password: nil, oauth_token: nil)
+  def do_snow_request(uri, http_verb, body, user: nil, password: nil, oauth_token: nil, skip_cert_check: false)
     uri = URI.parse(uri)
+
+    opts = {
+      use_ssl: uri.scheme == 'https',
+    }
+
+    opts[:verify_mode] = OpenSSL::SSL::VERIFY_NONE if skip_cert_check
 
     Net::HTTP.start(uri.host,
                     uri.port,
-                    use_ssl: uri.scheme == 'https',
-                    verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
+                    opts) do |http|
       header = { 'Content-Type' => 'application/json' }
       # Interpolate the HTTP verb and constantize to a class name.
       request_class_string = "Net::HTTP::#{http_verb.capitalize}"

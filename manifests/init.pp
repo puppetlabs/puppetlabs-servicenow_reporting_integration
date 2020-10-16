@@ -15,6 +15,7 @@ class servicenow_reporting_integration (
   Optional[String[1]] $pe_console_url                                                                     = undef,
   Optional[Array[String[1]]] $include_facts                                                               = ['identity.user', 'ipaddress','memorysize', 'memoryfree', 'os'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                                       = 'pretty_json',
+  Optional[Boolean] $skip_certificate_validation                                                          = false,
   # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
   Optional[String[1]] $caller_id                                                                          = undef,
   Optional[String[1]] $category                                                                           = undef,
@@ -118,6 +119,7 @@ class servicenow_reporting_integration (
       include_facts                              => $include_facts,
       facts_format                               => $facts_format,
       disabled                                   => $disabled,
+      skip_certificate_validation                => $skip_certificate_validation,
       }),
     notify       => $settings_file_notify,
   }

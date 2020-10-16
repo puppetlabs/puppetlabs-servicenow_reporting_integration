@@ -37,6 +37,7 @@ end
 
 # Validate the ServiceNow credentials
 begin
+  File.write('/tmp/settings', settings)
   endpoint = "#{instance_with_protocol(settings['instance'])}/api/now/table/#{validation_table}?sysparm_limit=1"
   response = Puppet::Util::Servicenow.do_snow_request(
     endpoint,
@@ -45,6 +46,7 @@ begin
     user: settings['user'],
     password: settings['password'],
     oauth_token: settings['oauth_token'],
+    skip_cert_check: settings['skip_certificate_validation'],
   )
   status_code = response.code.to_i
   if status_code >= 400
