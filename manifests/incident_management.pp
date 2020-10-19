@@ -60,6 +60,18 @@
 #   Puppet server, you can set this parameter to 'true'. The connection will
 #   still use SSL, but the module will not perform certificate validation, which
 #   is a risk for man in the middle attacks.
+# @param [Optional[Variant[Integer[0], Float[0]]]] http_read_timeout
+#   The read timeout parameter sets an upper limit on how long HTTP read
+#   read operations should take. For the sake simplicity, this paramter sets
+#   three different arguments to the Net::HTTP.start method: read_timeout,
+#   connect_timeout, ssl_timeout. This type is a Float because those argumants
+#   can all accept fractional seconds values. The default value of 60 seconds
+#   is also the default value for that Ruby class if no argument is passed
+# @param [Optional[Variant[Integer[0], Float[0]]]] http_write_timeout
+#   Sets the write_timeout argument to the Net::HTTP.start method. The datatype
+#   is a float because it accepts fractions seconds values. The default value of
+#   60 seconds is also the default value for that Ruby class if no argument is
+#   passed
 class servicenow_reporting_integration::incident_management (
   String[1] $instance,
   String[1] $caller_id,
@@ -80,6 +92,8 @@ class servicenow_reporting_integration::incident_management (
   Optional[Array[String[1]]] $include_facts                                                  = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                          = 'yaml',
   Optional[Boolean] $skip_certificate_validation                                             = false,
+  Optional[Variant[Integer[0], Float[0]]] $http_read_timeout                                 = 60,
+  Optional[Variant[Integer[0], Float[0]]] $http_write_timeout                                = 60,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                          => 'incident_management',
@@ -102,5 +116,7 @@ class servicenow_reporting_integration::incident_management (
     include_facts                           => $include_facts,
     facts_format                            => $facts_format,
     skip_certificate_validation             => $skip_certificate_validation,
+    http_read_timeout                       => $http_read_timeout,
+    http_write_timeout                      => $http_write_timeout,
   }
 }

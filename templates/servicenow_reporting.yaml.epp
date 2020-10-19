@@ -24,6 +24,8 @@
       String $facts_format,
       Optional[Boolean] $disabled,
       Optional[Boolean] $skip_certificate_validation,
+      Optional[Integer] $http_read_timeout,
+      Optional[Integer] $http_write_timeout,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_version,
@@ -56,4 +58,6 @@ include_facts: <%= $include_facts %>
 facts_format: <%= $facts_format %>
 disabled: <%= $disabled %>
 skip_certificate_validation: <%= $skip_certificate_validation %>
+http_read_timeout: <%= $http_read_timeout %>
+http_write_timeout: <%= $http_write_timeout %>
 report_processor_version: <%= $report_processor_version %>
