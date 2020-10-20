@@ -23,7 +23,7 @@
 #   The severity to assign to events when the report contains intentional changes
 # @param [Optional[Integer[0, 5]]] pending_corrective_changes_event_severity
 #   The severity to assign to events when the report contains pending corrective changes
-# @param [Optional[Integer[0, 5]]] pending_intential_changes_event_severity
+# @param [Optional[Integer[0, 5]]] pending_intentional_changes_event_severity
 #   The severity to assign to events when the report contains pending intentional changes
 # @param [Optional[Integer[0, 5]]] no_changes_event_severity
 #   The severity to assign to events when the report contains no events
@@ -33,23 +33,27 @@
 #   nested facts like 'os.distro'
 # @param [Enum['yaml', 'pretty_jason', 'json']] facts_format
 #   The format of the facts that are included in the event description
+# @param [Optional[Boolean]] disabled
+#   Turn off sending events from the report processor. This is an easier way to
+#   disable the module temporarily instead of uninstalling the module and
+#   removing the setting from puppet.conf.
 
 class servicenow_reporting_integration::event_management (
   String[1] $instance,
-  Optional[String[1]] $user                                           = undef,
-  Optional[String[1]] $password                                       = undef,
-  Optional[String[1]] $oauth_token                                    = undef,
-  Optional[String[1]] $pe_console_url                                 = undef,
-  String $servicenow_credentials_validation_table                     = 'em_event',
-  Optional[Servicenow_reporting_integration::Severity_levels] $failures_event_severity                        = 'Minor',
-  Optional[Servicenow_reporting_integration::Severity_levels] $corrective_changes_event_severity              = 'Warning',
-  Optional[Servicenow_reporting_integration::Severity_levels] $intentional_changes_event_severity             = 'OK',
-  Optional[Servicenow_reporting_integration::Severity_levels] $pending_corrective_changes_event_severity      = 'Warning',
-  Optional[Servicenow_reporting_integration::Severity_levels] $pending_intentional_changes_event_severity     = 'OK',
-  Optional[Servicenow_reporting_integration::Severity_levels] $no_changes_event_severity                      = 'OK',
-  Optional[Array[String[1]]] $include_facts                           = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
-  Enum['yaml', 'pretty_json', 'json'] $facts_format                   = 'yaml',
-  Optional[Boolean] $disabled                                         = false,
+  Optional[String[1]] $user                                                                               = undef,
+  Optional[String[1]] $password                                                                           = undef,
+  Optional[String[1]] $oauth_token                                                                        = undef,
+  Optional[String[1]] $pe_console_url                                                                     = undef,
+  String   $servicenow_credentials_validation_table                                                       = 'em_event',
+  Optional[Servicenow_reporting_integration::Severity_levels] $failures_event_severity                    = 'Minor',
+  Optional[Servicenow_reporting_integration::Severity_levels] $corrective_changes_event_severity          = 'Warning',
+  Optional[Servicenow_reporting_integration::Severity_levels] $intentional_changes_event_severity         = 'OK',
+  Optional[Servicenow_reporting_integration::Severity_levels] $pending_corrective_changes_event_severity  = 'Warning',
+  Optional[Servicenow_reporting_integration::Severity_levels] $pending_intentional_changes_event_severity = 'OK',
+  Optional[Servicenow_reporting_integration::Severity_levels] $no_changes_event_severity                  = 'OK',
+  Optional[Array[String[1]]] $include_facts                                                               = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
+  Enum['yaml', 'pretty_json', 'json'] $facts_format                                                       = 'yaml',
+  Optional[Boolean] $disabled                                                                             = false,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
