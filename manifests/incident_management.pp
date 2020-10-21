@@ -55,6 +55,11 @@
 #   nested facts like 'os.distro'
 # @param [Enum['yaml', 'pretty_jason', 'json']] facts_format
 #   The format of the facts that are included in the event description
+# @param [Optional[Boolean]] skip_certificate_validation
+#   If your Servicenow instance uses a certificate that is not trusted by the
+#   Puppet server, you can set this parameter to 'true'. The connection will
+#   still use SSL, but the module will not perform certificate validation, which
+#   is a risk for man in the middle attacks.
 class servicenow_reporting_integration::incident_management (
   String[1] $instance,
   String[1] $caller_id,
@@ -74,6 +79,7 @@ class servicenow_reporting_integration::incident_management (
   String $servicenow_credentials_validation_table                                            = 'incident',
   Optional[Array[String[1]]] $include_facts                                                  = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                          = 'yaml',
+  Optional[Boolean] $skip_certificate_validation                                             = false,
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                          => 'incident_management',
@@ -95,5 +101,6 @@ class servicenow_reporting_integration::incident_management (
     servicenow_credentials_validation_table => $servicenow_credentials_validation_table,
     include_facts                           => $include_facts,
     facts_format                            => $facts_format,
+    skip_certificate_validation             => $skip_certificate_validation,
   }
 }
