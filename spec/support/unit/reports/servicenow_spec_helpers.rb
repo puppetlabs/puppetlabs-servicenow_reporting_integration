@@ -80,6 +80,10 @@ def new_mock_resource_status(events, status_changed, status_failed)
   allow(status).to receive(:containment_path).and_return(['foo', 'bar'])
   allow(status).to receive(:file).and_return('site.pp')
   allow(status).to receive(:line).and_return(1)
+  allow(status).to receive(:resource).and_return('resource')
+  allow(status).to receive(:resource_type).and_return('resource_type')
+  allow(status).to receive(:corrective_change).and_return(true)
+  allow(status).to receive(:intentional_change).and_return(false)
   status
 end
 

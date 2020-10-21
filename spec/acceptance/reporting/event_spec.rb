@@ -42,6 +42,9 @@ describe 'ServiceNow reporting: event management' do
     expect(additional_info['ipaddress']).to match(%r{^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$})
     expect(additional_info['os.distro']['codename']).not_to be_empty
     expect(additional_info['report_labels']).to eql('intentional_changes')
+    expect(additional_info['resource_events'].to_json).to match(%r{corrective_changes})
+    expect(additional_info['resource_events'].to_json).to match(%r{intentional_changes})
+    expect(additional_info['resource_events'].to_json).to match(%r{Notify})
     # Check that the PE console URL is included
     expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
   end

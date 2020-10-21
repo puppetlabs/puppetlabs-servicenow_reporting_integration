@@ -41,6 +41,7 @@ By default each event will include the following information:
 * __Additional Information__: The additional information field contains data about the event in JSON format to make it easy to target that information for rules and workflows. It contains the following keys
   * __Facts__: A json format representation of all of the facts from the node where Puppet ran.
   * __Node Environment__: The environment the node is assigned to
+  * __resource_events__: A list of event summaries categorized by intentional and corrective change event types.
 
 The module will send a single event for every Puppet run on every node. If nothing interesting such as changes or a failure happened in a given Puppet run then the event type will be `node_report_unchanged`, there will be no resources listed in the description, and the report severity default value will be `OK`.
 
