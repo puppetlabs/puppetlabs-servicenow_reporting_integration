@@ -71,13 +71,21 @@ module Puppet::Util::Servicenow
   end
   module_function :settings
 
-  def do_snow_request(uri, http_verb, body, user: nil, password: nil, oauth_token: nil, skip_cert_check: false)
+  def do_snow_request(uri, http_verb, body, user: nil, password: nil, oauth_token: nil, skip_cert_check: false, read_timeout: 60, write_timeout: 60)
     uri = URI.parse(uri)
     verify_mode = skip_cert_check ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
 
+    # We're going to set the connect timeout and the read timeout to the same
+    # value, because in most user's minds these are functionally the same
+    # timeout, and until we get some specific push for separating them out
+    # we don't want to make the module more complex for users to understand.
     opts = {
-      use_ssl: uri.scheme == 'https',
-      verify_mode: verify_mode,
+      use_ssl:         uri.scheme == 'https',
+      verify_mode:     verify_mode,
+      read_timeout:    read_timeout,
+      connect_timeout: read_timeout,
+      ssl_timeout:     read_timeout,
+      write_timeout:   write_timeout,
     }
 
     Net::HTTP.start(uri.host,

@@ -55,7 +55,9 @@ Puppet::Reports.register_report(:servicenow) do
                                user: settings_hash['user'],
                                password: settings_hash['password'],
                                oauth_token: settings_hash['oauth_token'],
-                               skip_cert_check: settings['skip_certificate_validation'])
+                               skip_cert_check: settings['skip_certificate_validation'],
+                               read_timeout: settings['http_read_timeout'],
+                               write_timeout: settings['http_write_timeout'])
 
     raise "Failed to send the event. Error from #{endpoint} (status: #{response.code}): #{response.body}" if response.code.to_i >= 300
 
@@ -106,7 +108,9 @@ Puppet::Reports.register_report(:servicenow) do
                                user: settings_hash['user'],
                                password: settings_hash['password'],
                                oauth_token: settings_hash['oauth_token'],
-                               skip_cert_check: settings['skip_certificate_validation'])
+                               skip_cert_check: settings['skip_certificate_validation'],
+                               read_timeout: settings['http_read_timeout'],
+                               write_timeout: settings['http_write_timeout'])
 
     raise "Incident creation failed. Error from #{endpoint} (status: #{response.code}): #{response.body}" if response.code.to_i >= 300
 

@@ -91,6 +91,8 @@ To verify that everything worked, trigger a Puppet run on one of the nodes in th
 
 If you try to use the module and it doesn't work because of certificate validation errors, you can use the `skip_certificate_validation` parameter to disable certificate validation. The connection will still be SSL encrypted, but no certificate validation will be performed, which opens up a risk of 'Man in the middle' attacks. But, if you are using an internally hosted Servicenow instance that uses an SSL certificate that has not been imported for trust on the Puppet server machine, this may be necessary. Cloud hosted instances of Servicenow typically use a certificate signed by a well know public certificate authority, in which case, this parameter is not necessary.
 
+If the module starts to throw errors indicating failures due to HTTP timeouts, you can try to use the `http_read_timeout` and `http_write_timeout` parameters to extend the amount of time available to complete a Servicenow API request.
+
 ## Development
 
 ### Unit tests

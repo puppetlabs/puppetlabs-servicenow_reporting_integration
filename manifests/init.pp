@@ -16,6 +16,8 @@ class servicenow_reporting_integration (
   Optional[Array[String[1]]] $include_facts                                                               = ['identity.user', 'ipaddress','memorysize', 'memoryfree', 'os'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                                       = 'pretty_json',
   Optional[Boolean] $skip_certificate_validation                                                          = false,
+  Optional[Variant[Integer[0], Float[0]]] $http_read_timeout                                              = 60,
+  Optional[Variant[Integer[0], Float[0]]] $http_write_timeout                                             = 60,
   # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
   Optional[String[1]] $caller_id                                                                          = undef,
   Optional[String[1]] $category                                                                           = undef,
@@ -120,6 +122,8 @@ class servicenow_reporting_integration (
       facts_format                               => $facts_format,
       disabled                                   => $disabled,
       skip_certificate_validation                => $skip_certificate_validation,
+      http_read_timeout                          => $http_read_timeout,
+      http_write_timeout                         => $http_write_timeout,
       }),
     notify       => $settings_file_notify,
   }

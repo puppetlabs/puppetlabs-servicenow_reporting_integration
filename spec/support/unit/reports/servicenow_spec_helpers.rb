@@ -45,6 +45,9 @@ def default_settings_hash
     'no_changes_event_severity'                  => 'OK',
     'facts_format'                               => 'yaml',
     'include_facts'                              => ['id', 'os.distro', 'ipaddress'],
+    'skip_certificate_validation'                => true,
+    'http_read_timeout'                          => 60,
+    'http_write_timeout'                         => 60,
   }
 end
 
@@ -99,10 +102,13 @@ end
 
 def expect_sent_event(expected_credentials = {})
   # do_snow_request will only be called to send an event
-  expect(processor).to receive(:do_snow_request) do |_, _, request_body, actual_credentials|
+  expect(processor).to receive(:do_snow_request) do |_, _, request_body, kw_args|
     actual_events = request_body[:records]
     yield actual_events[0]
-    expect(actual_credentials).to include(expected_credentials)
+    expect(kw_args).to include(expected_credentials)
+    expect(kw_args[:skip_cert_check]).not_to be_nil
+    expect(kw_args[:read_timeout]).to be >= 0
+    expect(kw_args[:write_timeout]).to be >= 0
     new_mock_response(200, '')
   end
 end
@@ -123,14 +129,14 @@ end
 
 def expect_created_incident(expected_incident, expected_credentials = {})
   # do_snow_request will only be called to create an incident
-  expect(processor).to receive(:do_snow_request) do |_, _, actual_incident, actual_credentials|
+  expect(processor).to receive(:do_snow_request) do |_, _, actual_incident, kw_args|
     # Matching key-by-key makes it easier to debug test failures
     expect(actual_incident[:short_description]).to match(expected_incident[:short_description])
-
     expect(actual_incident[:description]).to match(expected_incident[:description])
-
-    expect(actual_credentials).to include(expected_credentials)
-
+    expect(kw_args).to include(expected_credentials)
+    expect(kw_args[:skip_cert_check]).not_to be_nil
+    expect(kw_args[:read_timeout]).to be >= 0
+    expect(kw_args[:write_timeout]).to be >= 0
     new_mock_response(200, { 'result' => { 'sys_id' => 'foo_sys_id', 'number' => 1 } }.to_json)
   end
 end
