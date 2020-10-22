@@ -234,9 +234,9 @@ module Puppet::Util::Servicenow
     # Ideally, we'd like to link to the specific report here. However, fine-grained PE console links are
     # unstable even for Y PE releases (e.g. the link is different for PE 2019.2 and PE 2019.8). Thus, the
     # best and most stable solution we can do (for now) is the description you see here.
-    description = "See the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
-    description << "\n\n#{labels}" unless labels.nil?
+    description =  labels.nil? ? '' : labels
     description << "\n\nEnvironment: #{environment}"
+    description << "\n\nSee the PE console for the full report. You can access the PE console at #{settings_hash['pe_console_url']}."
     description << "\n\nResource Statuses:\n#{resourse_status_summary}" unless resourse_status_summary.empty?
     description << "\n\nLog Output:\n#{log_messages}" if catalog_compilation_failure?(resource_statuses, transaction_completed)
     description << "\n\n== Facts ==\n#{selected_facts(settings_hash)}"
@@ -341,7 +341,6 @@ module Puppet::Util::Servicenow
 
   def description_report_labels(resource_statuses, transaction_completed)
     labels = report_labels(resource_statuses, transaction_completed)
-    labels.map! { |condition| "  #{condition}" }
     "Report Labels:\n\t#{labels.join("\n\t")}" unless labels.empty?
   end
   module_function :description_report_labels
