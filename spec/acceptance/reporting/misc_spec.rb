@@ -15,7 +15,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
-      password: servicenow_config['password'],
+      password: "Sensitive('#{servicenow_config['password']}')",
       skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end
@@ -34,9 +34,11 @@ describe 'ServiceNow reporting: miscellaneous tests' do
 
   context 'user specifies a hiera-eyaml encrypted password' do
     let(:params) do
+      servicenow_config = servicenow_instance.bolt_config['remote']
       default_params = super().merge('incident_creation_conditions' => ['intentional_changes'])
-      password = default_params.delete(:password)
-      default_params[:password] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
+      password = servicenow_config['password']
+      encrypted_password = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
+      default_params[:password] = "Sensitive('#{encrypted_password.chomp}')"
       default_params
     end
     # Use a 'changed' report to test this.
@@ -64,7 +66,8 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       default_params.delete(:user)
       default_params.delete(:password)
       oauth_token = servicenow_config['oauth_token']
-      default_params[:oauth_token] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
+      encryped_token = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
+      default_params[:oauth_token] = "Sensitive('#{encryped_token.chomp}')"
       default_params[:incident_creation_conditions] = ['intentional_changes']
       default_params
     end

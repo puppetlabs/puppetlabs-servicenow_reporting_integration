@@ -58,8 +58,8 @@
 class servicenow_reporting_integration::event_management (
   String[1] $instance,
   Optional[String[1]] $user                                                                               = undef,
-  Optional[String[1]] $password                                                                           = undef,
-  Optional[String[1]] $oauth_token                                                                        = undef,
+  Optional[Sensitive[String[1]]] $password                                                                = undef,
+  Optional[Sensitive[String[1]]] $oauth_token                                                             = undef,
   Optional[String[1]] $pe_console_url                                                                     = undef,
   String   $servicenow_credentials_validation_table                                                       = 'em_event',
   Optional[Servicenow_reporting_integration::Severity_levels] $failures_event_severity                    = 'Minor',

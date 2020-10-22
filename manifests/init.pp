@@ -9,8 +9,8 @@ class servicenow_reporting_integration (
   # COMMON PARAMETERS
   String[1] $instance,
   Optional[String[1]] $user                                                                               = undef,
-  Optional[String[1]] $password                                                                           = undef,
-  Optional[String[1]] $oauth_token                                                                        = undef,
+  Optional[Sensitive[String[1]]] $password                                                                = undef,
+  Optional[Sensitive[String[1]]] $oauth_token                                                             = undef,
   Optional[String] $servicenow_credentials_validation_table                                               = undef,
   Optional[String[1]] $pe_console_url                                                                     = undef,
   Optional[Array[String[1]]] $include_facts                                                               = ['identity.user', 'ipaddress','memorysize', 'memoryfree', 'os'],

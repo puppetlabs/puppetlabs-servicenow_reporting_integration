@@ -14,7 +14,7 @@ RSpec.shared_examples 'common reporting integration tests' do |operation_mode: n
 
   context 'with an oauth_token' do
     let(:params) do
-      super().merge('oauth_token' => 'foo_token')
+      super().merge('oauth_token' => RSpec::Puppet::Sensitive.new('foo_token'))
              .tap { |hs| hs.delete('user') }
              .tap { |hs| hs.delete('password') }
     end
@@ -23,7 +23,7 @@ RSpec.shared_examples 'common reporting integration tests' do |operation_mode: n
   end
 
   context 'with all credentials' do
-    let(:params) { super().merge('oauth_token' => 'foo_token') }
+    let(:params) { super().merge('oauth_token' => RSpec::Puppet::Sensitive.new('foo_token')) }
 
     it { is_expected.to compile.and_raise_error(%r{ please specify either user/password or oauth_token not both. }) }
   end
