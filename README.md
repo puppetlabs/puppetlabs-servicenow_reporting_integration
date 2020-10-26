@@ -38,10 +38,14 @@ By default each event will include the following information:
   * __Environment__ - The Puppet environment the node is assigned to.
   * __Resource Statuses__ - The full name of the resource, the name of the property and the event message, and the file and line where the resource was defined, for each resource event that was in the report. All resource events are included except for `audit` events, which are resources for which nothing interesting happened; Puppet simply verified that they are currently still in the correct state.
   * __Facts__ - All of the facts that were requested via the `include_facts` parameter. The default format is yaml, but can be changed via the `facts_format` parameter.
-* __Additional Information__: The additional information field contains data about the event in JSON format to make it easy to target that information for rules and workflows. It contains the following keys
-  * __Facts__: A json format representation of all of the facts from the node where Puppet ran.
-  * __Node Environment__: The environment the node is assigned to
-  * __resource_events__: A list of event summaries categorized by intentional and corrective change event types.
+* __Additional Information__: The additional information field contains data about the event in JSON format to make it easy to target that information for rules and workflows. It will contain separate top level keys for each of the facts included in the event from the `include_facts` parameter. It will also contain the following keys
+  * __environment__: The environment the node is assigned to
+  * __report_labels__: A list of all of the different kinds of events that are included in this event.
+  * __corrective_changes__: All of the resource events that were triggered by corrective changes.
+  * __intentional_changes__: All of the resource events that were triggered by intentional changes.
+  * __pending_corrective_changes__: All of the resource events that were trigged by pending (noop) corrective changes.
+  * __pending_intentional_changes__: All of the resource events that were triggered by pending (noop) intentional changes.
+  * __failures__: All of the resources events that were triggered by resource failures.
 
 The module will send a single event for every Puppet run on every node. If nothing interesting such as changes or a failure happened in a given Puppet run then the event type will be `node_report_unchanged`, there will be no resources listed in the description, and the report severity default value will be `OK`.
 
