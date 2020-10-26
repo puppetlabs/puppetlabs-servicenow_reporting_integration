@@ -29,7 +29,7 @@ describe 'ServiceNow reporting: incident creation' do
       pe_console_url: "https://#{master.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
-      password: servicenow_config['password'],
+      password: "Sensitive('#{servicenow_config['password']}')",
       skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end

@@ -68,7 +68,7 @@ end
 
 def declare(type, title, params = {})
   params = params.map do |name, value|
-    value = "'#{value}'" if value.is_a?(String)
+    value = "'#{value}'" if value.is_a?(String) && !value.match('Sensitive')
     "  #{name} => #{value},"
   end
 

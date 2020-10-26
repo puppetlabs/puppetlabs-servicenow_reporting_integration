@@ -7,7 +7,7 @@ describe 'ServiceNow reporting: event management' do
     {
       instance: servicenow_instance.uri,
       user: servicenow_config['user'],
-      password: servicenow_config['password'],
+      password: "Sensitive('#{servicenow_config['password']}')",
       skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end

@@ -4,6 +4,7 @@ require 'spec_helper'
 require 'securerandom'
 require 'support/classes/shared_contexts'
 require 'support/classes/shared_examples'
+require 'support/unit/sensitive'
 
 describe 'servicenow_reporting_integration::event_management' do
   include_context 'common reporting integration setup'
@@ -13,7 +14,7 @@ describe 'servicenow_reporting_integration::event_management' do
       'instance'       => 'foo_instance',
       'pe_console_url' => 'foo_pe_console_url',
       'user'           => 'foo_user',
-      'password'       => 'foo_password',
+      'password'       => RSpec::Puppet::Sensitive.new('foo_password'),
     }
   end
 

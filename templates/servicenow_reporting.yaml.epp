@@ -3,8 +3,8 @@
       String $pe_console_url,
       Optional[String] $caller_id,
       Optional[String] $user,
-      Optional[String] $password,
-      Optional[String] $oauth_token,
+      Optional[Sensitive[String]] $password,
+      Optional[Sensitive[String]] $oauth_token,
       Optional[String] $category,
       Optional[String] $subcategory,
       Optional[String] $contact_type,
@@ -37,8 +37,8 @@ operation_mode: <%= $operation_mode %>
 pe_console_url: <%= $pe_console_url %>
 caller_id: <%= $caller_id %>
 user: <%= $user %>
-password: <%= $password %>
-oauth_token: <%= $oauth_token %>
+password: <%= if $password { $password.unwrap } %>
+oauth_token: <%= if $oauth_token { $oauth_token.unwrap } %>
 category: <%= $category %>
 subcategory: <%= $subcategory %>
 contact_type: <%= $contact_type %>
