@@ -180,6 +180,21 @@ module Puppet::Util::Servicenow
   end
   module_function :calculate_event_conditions
 
+  def event_type(resource_statuses, status)
+    case status
+    when 'unchanged'
+      'node_report_unchanged'
+    when 'failed'
+      'node_report_failed'
+    when 'changed'
+      event_conditions = calculate_event_conditions(resource_statuses)
+      applicable_event_conditions = event_conditions.select { |_, condition| condition == true }.keys
+      return 'node_report_corrective_changes' if applicable_event_conditions.include?('corrective_changes')
+      'node_report_intentional_changes'
+    end
+  end
+  module_function :event_type
+
   def event_security_string(event_security_string)
     security_settings = {
       'Clear' => 0,
