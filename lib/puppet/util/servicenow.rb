@@ -124,18 +124,30 @@ module Puppet::Util::Servicenow
   module_function :human_readable_event_summary
 
   def additional_info_resource_events(resource_statuses)
-    corrective_changes = []
-    intentional_changes = []
+    corrective_changes          = []
+    intentional_changes         = []
+    pending_corrective_changes  = []
+    pending_intentional_changes = []
+    failures                    = []
     resource_statuses.values.select { |resource| resource.out_of_sync == true || resource.failed == true }.each do |resource|
       event_summary = { 'resource'         => resource.resource,
                         'containing_class' => resource.resource_type,
                         'containment_path' => resource.containment_path,
                         'file'             => resource.file,
                         'line'             => resource.line }
-      (resource.corrective_change == true) ? (corrective_changes << event_summary) : (intentional_changes << event_summary)
+      if resource.failed
+        failures << event_summary
+      elsif resource.events.select { |event| event.status == 'noop' }.count > 0
+        (resource.corrective_change == true) ? (pending_corrective_changes << event_summary) : (pending_intentional_changes << event_summary)
+      else
+        (resource.corrective_change == true) ? (corrective_changes << event_summary) : (intentional_changes << event_summary)
+      end
     end
-    { 'corrective_changes'  => corrective_changes,
-      'intentional_changes' => intentional_changes }
+    { 'corrective_changes'          => corrective_changes,
+      'intentional_changes'         => intentional_changes,
+      'pending_corrective_changes'  => pending_corrective_changes,
+      'pending_intentional_changes' => pending_intentional_changes,
+      'failures'                    => failures }
   end
   module_function :additional_info_resource_events
 
@@ -289,7 +301,7 @@ module Puppet::Util::Servicenow
     additional_information['environment'] = environment
     additional_information['report_labels'] = additional_info_report_labels(resource_statuses, transaction_completed)
     additional_information.merge!(selected_facts(settings_hash, nil, :object))
-    additional_information['resource_events'] = additional_info_resource_events(resource_statuses)
+    additional_information.merge!(additional_info_resource_events(resource_statuses))
     JSON.pretty_generate(additional_information)
   end
   module_function :event_additional_information

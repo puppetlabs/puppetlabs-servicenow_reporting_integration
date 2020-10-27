@@ -34,7 +34,7 @@ describe 'ServiceNow report processor: event_management mode' do
       expect(additional_info['environment']).to eql('production')
       expect(additional_info['ipaddress']).to eql('192.168.0.1')
       expect(additional_info['os.distro']['codename']).to eql('xenial')
-      expect(additional_info['resource_events']['corrective_changes'].first['containment_path']).to eql(['foo', 'bar'])
+      expect(additional_info['corrective_changes'].first['containment_path']).to eql(['foo', 'bar'])
       # The message key will be tested more thoroughly in other
       # tests
       expect(actual_event['message_key']).not_to be_empty
