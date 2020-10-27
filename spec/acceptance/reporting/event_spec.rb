@@ -24,7 +24,7 @@ describe 'ServiceNow reporting: event management' do
     additional_info = JSON.parse(event['additional_info'])
 
     expect(event['source']).to eql('Puppet')
-    expect(event['type']).to eql('node_report_changed')
+    expect(event['type']).to eql('node_report_intentional_changes')
     expect(event['severity']).to eql('5')
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty

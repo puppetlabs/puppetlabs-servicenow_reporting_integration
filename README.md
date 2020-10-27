@@ -29,7 +29,7 @@ To send events, classify your Puppet servers with the `servicenow_reporting_inte
 By default each event will include the following information:
 * __Source__: Puppet
 * __Node__: The node the agent ran on
-* __Type__: The type of event. Can be one of `node_report_changed`, `node_report_unchanged`, `node_report_failed`
+* __Type__: The type of event. Can be one of `node_report_intentional_changes`, `node_report_corrective_changes`, `node_report_unchanged`, `node_report_failed`
 * __Source instance__: The name of the Puppet server that generated the report
 * __Message Key__: A hash of all of the relevant report properties to ensure that future events are grouped together properly
 * __Severity__: The highest severity rating of all of the events that occurred in a given run. These severity levels can be configured via the `<change_type>_event_severity` class parameters, including the severity of `no_changes` reports via the `no_changes_events_severity` parameter.
