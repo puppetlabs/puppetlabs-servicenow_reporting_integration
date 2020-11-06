@@ -143,11 +143,16 @@ module Puppet::Util::Servicenow
         (resource.corrective_change == true) ? (corrective_changes << event_summary) : (intentional_changes << event_summary)
       end
     end
-    { 'corrective_changes'          => corrective_changes,
-      'intentional_changes'         => intentional_changes,
-      'pending_corrective_changes'  => pending_corrective_changes,
-      'pending_intentional_changes' => pending_intentional_changes,
-      'failures'                    => failures }
+    { 'corrective_changes'               => corrective_changes,
+      'corrective_changes_hash'          => corrective_changes.empty? ? [] : Digest::SHA1.hexdigest(corrective_changes.to_json.chars.sort.join),
+      'intentional_changes'              => intentional_changes,
+      'intentional_changes_hash'         => intentional_changes.empty? ? [] : Digest::SHA1.hexdigest(intentional_changes.to_json.chars.sort.join),
+      'pending_corrective_changes'       => pending_corrective_changes,
+      'pending_corrective_changes_hash'  => pending_corrective_changes.empty? ? [] : Digest::SHA1.hexdigest(pending_corrective_changes.to_json.chars.sort.join),
+      'pending_intentional_changes'      => pending_intentional_changes,
+      'pending_intentional_changes_hash' => pending_intentional_changes.empty? ? [] : Digest::SHA1.hexdigest(pending_intentional_changes.to_json.chars.sort.join),
+      'failures'                         => failures,
+      'failures_hash'                    => failures.empty? ? [] : Digest::SHA1.hexdigest(failures.to_json.chars.sort.join) }
   end
   module_function :additional_info_resource_events
 
