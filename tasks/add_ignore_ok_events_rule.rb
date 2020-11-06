@@ -25,10 +25,12 @@ class ServiceNowEventRuleCreate < TaskHelper
     # because the current scope binding is passed into the ERB call.
     data = ERB.new(File.read(File.join(__dir__, '../files/add_ignore_event_ok_rule_data.erb'))).result binding
 
-    user        = _target[:user]        if user.nil?
-    password    = _target[:password]    if password.nil?
-    oauth_token = _target[:oauth_token] if oauth_token.nil?
-    instance    = _target[:uri]         if instance.nil?
+    unless _target.nil?
+      user        = _target[:user]        if user.nil?        && _target.key?(:user)
+      password    = _target[:password]    if password.nil?    && _target.key?(:password)
+      oauth_token = _target[:oauth_token] if oauth_token.nil? && _target.key?(:oauth_token)
+      instance    = _target[:uri]         if instance.nil?    && _target.key?(:uri)
+    end
 
     uri = "#{instance_with_protocol(instance)}/api/now/table/em_match_rule"
 
@@ -41,6 +43,8 @@ class ServiceNowEventRuleCreate < TaskHelper
                                                           oauth_token: oauth_token)
 
       raise "Failed to create the rule. Error from #{uri} (status: #{response.code}): #{response.body}" if response.code.to_i >= 300
+
+      { msg: "Created Rule: #{name}", http_code: response.code }
     rescue => exception
       raise TaskHelper::Error.new('Servicenow Request Error',
                                   'EventRuleCreate/do_snow_request',
