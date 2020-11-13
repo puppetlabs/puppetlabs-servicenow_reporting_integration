@@ -18,6 +18,7 @@ class servicenow_reporting_integration (
   Optional[Boolean] $skip_certificate_validation                                                          = false,
   Optional[Variant[Integer[0], Float[0]]] $http_read_timeout                                              = 60,
   Optional[Variant[Integer[0], Float[0]]] $http_write_timeout                                             = 60,
+  Enum['selfsigned', 'truststore', 'none'] $pe_console_cert_validation                                    = 'selfsigned',
   # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
   Optional[String[1]] $caller_id                                                                          = undef,
   Optional[String[1]] $category                                                                           = undef,
@@ -93,7 +94,7 @@ class servicenow_reporting_integration (
     # argument since that can be an empty string. Finally, this manifest's invoked on
     # a puppetserver node so the module_directory and the validate_settings.rb script
     # should always exist.
-    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}'",
+    validate_cmd => "/opt/puppetlabs/puppet/bin/ruby ${module_directory('servicenow_reporting_integration')}/files/validate_settings.rb % '${servicenow_credentials_validation_table}' '${pe_console_cert_validation}'",
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                                   => $instance,
       operation_mode                             => $operation_mode,
@@ -124,6 +125,7 @@ class servicenow_reporting_integration (
       skip_certificate_validation                => $skip_certificate_validation,
       http_read_timeout                          => $http_read_timeout,
       http_write_timeout                         => $http_write_timeout,
+      pe_console_cert_validation                 => $pe_console_cert_validation,
       }),
     notify       => $settings_file_notify,
   }

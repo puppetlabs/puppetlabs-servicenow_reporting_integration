@@ -3,25 +3,38 @@ require_relative '../lib/puppet/util/servicenow.rb'
 # This script is used within the 'validate_cmd' parameter of the settings file's
 # File resource
 
-unless ARGV.length == 2
+unless ARGV.length == 3
   raise 'Usage: path/to/puppet/ruby validate_settings.rb <temporary_settings_file_path> <validation_table>'
 end
 temporary_settings_file_path = ARGV[0]
 validation_table = ARGV[1]
+cert_validation = ARGV[2]
 
 settings = Puppet::Util::Servicenow.settings(temporary_settings_file_path)
 
 # Validate the PE console URL
 begin
   pe_console_url = settings['pe_console_url']
-  cert = `puppet config print localcacert`.chomp
   # The /auth/favicon.ico endpoint is a stable PE console endpoint
   uri = URI.parse("#{pe_console_url}/auth/favicon.ico")
+  opts = {
+    use_ssl:     uri.scheme == 'https',
+  }
+
+  case cert_validation.to_sym
+  when :selfsigned
+    cert = `puppet config print localcacert`.chomp
+    opts[:verify_mode] = OpenSSL::SSL::VERIFY_PEER
+    opts[:ca_file] = cert
+  when :truststore
+    opts[:verify_mode] = OpenSSL::SSL::VERIFY_PEER
+  when :none
+    opts[:verify_mode] = OpenSSL::SSL::VERIFY_NONE
+  end
+
   response = Net::HTTP.start(uri.host,
                              uri.port,
-                             use_ssl: uri.scheme == 'https',
-                             verify_mode: OpenSSL::SSL::VERIFY_PEER,
-                             ca_file: cert) do |http|
+                             opts) do |http|
     request = Net::HTTP::Get.new(uri)
     http.request(request)
   end
