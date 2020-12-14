@@ -98,7 +98,7 @@ class servicenow_reporting_integration (
     content      => epp('servicenow_reporting_integration/servicenow_reporting.yaml.epp', {
       instance                                   => $instance,
       operation_mode                             => $operation_mode,
-      pe_console_url                             => $final_console_url,
+      pe_console_url                             => regsubst($final_console_url, '\/$', ''),
       caller_id                                  => $caller_id,
       user                                       => $user,
       password                                   => $password,

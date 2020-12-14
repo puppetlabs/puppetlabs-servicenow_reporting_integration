@@ -50,6 +50,7 @@ RSpec.configure do |c|
   c.filter_run_excluding(bolt: true) unless ENV['GEM_BOLT']
   c.after(:suite) do
   end
+  c.confdir = '.'
 end
 
 # Ensures that a module is defined
