@@ -5,7 +5,7 @@ pipeline{
         label 'worker'
     }
     environment {
-      RUBY_VERSION='2.5.1'
+      RUBY_VERSION='2.5.7'
       GEM_SOURCE='https://artifactory.delivery.puppetlabs.net/artifactory/api/gems/rubygems/'
       RAKE_SETUP_TASK='rake acceptance:setup'
       RAKE_TEST_TASK='rake acceptance:run_tests'
@@ -17,6 +17,8 @@ pipeline{
 
         stage('Setup') {
             steps {
+                echo 'List Rubies'
+                sh 'ls -al /usr/local/rvm/rubies'
                 echo 'Bundle Install'
                 bundleInstall env.RUBY_VERSION
                 bundleExec env.RUBY_VERSION, env.RAKE_SETUP_TASK
