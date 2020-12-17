@@ -1,7 +1,7 @@
 # Unfortunately, building from 2.5 leads to https://github.com/debauchee/barrier/issues/126
 # which means that we can't curl our mock instance. Thus, we build this from 2.5-alpine
 # instead.
-FROM ruby:2.5-alpine
+FROM artifactory.delivery.puppetlabs.net/ruby:2.5-alpine
 
 WORKDIR .
 
