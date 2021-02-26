@@ -96,6 +96,7 @@ Puppet::Reports.register_report(:servicenow) do
       urgency: settings_hash['urgency'],
       assignment_group: settings_hash['assignment_group'],
       assigned_to: settings_hash['assigned_to'],
+      cmdb_ci: host,
     }
 
     endpoint = "#{instance_with_protocol(settings_hash['instance'])}/api/now/table/incident"
