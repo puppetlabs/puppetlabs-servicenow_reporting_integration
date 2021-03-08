@@ -1,7 +1,7 @@
 # @summary
 #   This class contains the common setup code for servicenow_reporting_integration::incident_management
 #   and servicenow_reporting_integration::event_management.
-# 
+#
 # @api private
 class servicenow_reporting_integration (
   # OPERATION MODE
@@ -29,7 +29,7 @@ class servicenow_reporting_integration (
   Optional[Integer] $urgency                                                                              = undef,
   Optional[String[1]] $assignment_group                                                                   = undef,
   Optional[String[1]] $assigned_to                                                                        = undef,
-  Optional[Servicenow_reporting_integration::IncidentCreationConditions] $incident_creation_conditions    = undef,
+  Optional[Servicenow_reporting_integration::ReportCategories] $incident_creation_conditions              = undef,
   # PARAMETERS SPECIFIC TO EVENT_MANAGEMENT
   Optional[Servicenow_reporting_integration::Severity_levels] $failures_event_severity                    = undef,
   Optional[Servicenow_reporting_integration::Severity_levels] $corrective_changes_event_severity          = undef,
@@ -38,6 +38,8 @@ class servicenow_reporting_integration (
   Optional[Servicenow_reporting_integration::Severity_levels] $pending_intentional_changes_event_severity = undef,
   Optional[Servicenow_reporting_integration::Severity_levels] $no_changes_event_severity                  = undef,
   Optional[Boolean] $disabled                                                                             = false,
+  Optional[Servicenow_reporting_integration::ReportCategories] $event_creation_conditions                 = undef,
+
 ) {
   if (($user or $password) and $oauth_token) {
     fail('please specify either user/password or oauth_token not both.')
@@ -111,7 +113,7 @@ class servicenow_reporting_integration (
       urgency                                    => $urgency,
       assignment_group                           => $assignment_group,
       assigned_to                                => $assigned_to,
-      incident_creation_conditions               => $incident_creation_conditions ,
+      incident_creation_conditions               => $incident_creation_conditions,
       report_processor_version                   => $report_processor_version,
       failures_event_severity                    => $failures_event_severity,
       corrective_changes_event_severity          => $corrective_changes_event_severity,
@@ -126,6 +128,7 @@ class servicenow_reporting_integration (
       http_read_timeout                          => $http_read_timeout,
       http_write_timeout                         => $http_write_timeout,
       pe_console_cert_validation                 => $pe_console_cert_validation,
+      event_creation_conditions                  => $event_creation_conditions,
       }),
     notify       => $settings_file_notify,
   }

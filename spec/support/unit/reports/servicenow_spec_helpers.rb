@@ -48,6 +48,7 @@ def default_settings_hash
     'skip_certificate_validation'                => true,
     'http_read_timeout'                          => 60,
     'http_write_timeout'                         => 60,
+    'event_creation_conditions'                  => ['always'],
   }
 end
 

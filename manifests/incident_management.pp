@@ -94,7 +94,7 @@ class servicenow_reporting_integration::incident_management (
   Optional[Integer] $urgency                                                                 = undef,
   Optional[String[1]] $assignment_group                                                      = undef,
   Optional[String[1]] $assigned_to                                                           = undef,
-  Servicenow_reporting_integration::IncidentCreationConditions $incident_creation_conditions = ['failures', 'corrective_changes'],
+  Servicenow_reporting_integration::ReportCategories $incident_creation_conditions           = ['failures', 'corrective_changes'],
   String $servicenow_credentials_validation_table                                            = 'incident',
   Optional[Array[String[1]]] $include_facts                                                  = ['aio_agent_version', 'id', 'memorysize', 'memoryfree', 'ipaddress', 'ipaddress6', 'os.distro', 'os.windows', 'path', 'uptime', 'rubyversion'],
   Enum['yaml', 'pretty_json', 'json'] $facts_format                                          = 'yaml',
