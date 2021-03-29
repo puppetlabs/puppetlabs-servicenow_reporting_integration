@@ -11,13 +11,14 @@ describe 'ServiceNow reporting: incident creation' do
       'table' => 'sys_user',
       'url_params' => {
         'sysparm_limit' => 1,
-      },
+      }.to_json,
     }
+
     users = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', task_params).result['result']
     if users.empty?
       raise "cannot calculate the caller_id: there are no users available on the ServiceNow instance #{servicenow_instance.uri} (table sys_user)"
     end
-    users[0]
+    users[0].to_json
   end
 
   let(:kaller) { kaller_record }
@@ -141,7 +142,7 @@ describe 'ServiceNow reporting: incident creation' do
         'table' => 'sys_user_grmember',
         'url_params' => {
           'sysparm_exclude_reference_link' => true,
-        },
+        }.to_json,
       }
       pairs = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', task_params).result['result']
       if pairs.empty?

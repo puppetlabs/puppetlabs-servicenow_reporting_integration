@@ -67,6 +67,6 @@ RSpec.shared_context 'corrective change setup' do |file_resource_hash|
     # do that.
     set_sitepp_content(to_manifest(to_declaration(file_resource_hash)))
     trigger_puppet_run(master)
-    write_file(master, file_resource_hash['title'], "#{file_resource_hash['params']['content']}_corrective_change_setup")
+    master.write_file("#{file_resource_hash['params']['content']}_corrective_change_setup", file_resource_hash['title'])
   end
 end
