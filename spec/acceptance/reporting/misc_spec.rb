@@ -59,7 +59,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
     end
 
-    puts 'Skipping this test becuase there is no token specified in the test inventory.' if skip_oauth_tests
+    puts 'Skipping this test because there is no token specified in the test inventory.' if skip_oauth_tests
 
     let(:params) do
       default_params = super()
@@ -112,16 +112,18 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     before(:each) do
       master.run_shell("rm -f #{created_file_path}")
       master.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
-      write_file(master, "#{reports_dir}/servicenow.rb", report_processor_implementation)
+      master.write_file(report_processor_implementation, "#{reports_dir}/servicenow.rb")
 
       # Update the metadata.json version to simulate a report processor change
       new_metadata_json = old_metadata_json.merge('version' => '0.0.0')
-      write_file(master, METADATA_JSON_PATH, JSON.pretty_generate(new_metadata_json))
+      master.write_file(JSON.pretty_generate(new_metadata_json), METADATA_JSON_PATH)
+      master.run_shell("chown pe-puppet #{reports_dir}/servicenow.rb #{METADATA_JSON_PATH}")
     end
+
     after(:each) do
       master.run_shell("rm -f #{created_file_path}")
       master.run_shell("mv #{reports_dir}/servicenow_current.rb #{reports_dir}/servicenow.rb")
-      write_file(master, METADATA_JSON_PATH, JSON.pretty_generate(old_metadata_json))
+      master.write_file(JSON.pretty_generate(old_metadata_json), METADATA_JSON_PATH)
     end
 
     it 'picks up those changes' do

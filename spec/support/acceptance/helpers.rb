@@ -1,5 +1,5 @@
 require 'puppet_litmus'
-
+PuppetLitmus.configure!
 # The Target class and TargetHelpers module are a useful ways
 # for tests to reuse Litmus' helpers when they want to do stuff
 # on nodes that may not be the current target host (like e.g.
@@ -86,7 +86,7 @@ module Helpers
       'url_params' => {
         'sysparm_query' => query,
         'sysparm_exclude_reference_link' => true,
-      },
+      }.to_json,
     }
 
     task_result = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', params)
