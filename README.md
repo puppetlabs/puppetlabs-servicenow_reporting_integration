@@ -64,7 +64,7 @@ To stop the module from sending any events to Servicenow, you can set the `disab
 
 ### Incidents
 
-To send incidents, classify your Puppet server nodes with the `servicenow_reporting_integration::incident_mangement` class. The minimum parameters you need to configure for the class to work are `instance` (the fqdn of the Servicenow instance), and then `user` and `password`, or you can bypass username/password authentication and use an oauth token using the `oauth_token` parameter. Lastly you will need to get the `sys_id` of the user you would like to use as the 'Caller' for each ticket. The `servicenow_reporting_integration::incident_management` class requires the `sys_id` for a user to be placed in the the `caller_id` parameter because that is a required incident field on ServiceNow’s end. Look below for steps to get the `sys_id` for a user from Servicenow. 
+To send incidents, classify your Puppet server nodes with the `servicenow_reporting_integration::incident_mangement` class. The minimum parameters you need to configure for the class to work are `instance` (the fqdn of the Servicenow instance), and then `user` and `password`, or you can bypass username/password authentication and use an oauth token using the `oauth_token` parameter. Lastly you will need to get the `sys_id` of the user you would like to use as the 'Caller' for each ticket. The `servicenow_reporting_integration::incident_management` class requires the `sys_id` for a user to be placed in the the `caller_id` parameter because that is a required incident field on ServiceNow’s end. Look below for steps to get the `sys_id` for a user from Servicenow.
 
 To get the desired `sys_id` from Servicenow:
 1. In the Application Navigator (left sidebar navigation menu) navigate to System Security > Users and Groups > Users
@@ -133,7 +133,7 @@ For example...
 ```
 export SN_INSTANCE=dev84270.service-now.com
 export SN_PASSWORD='d0hPFGhj5iNU!!!'
-export SN_USER=admin  
+export SN_USER=admin
 ```
 
 To run the tests after setup, you can do `bundle exec rspec spec/acceptance`. To teardown the infrastructure, do `bundle exec rake acceptance:tear_down`.

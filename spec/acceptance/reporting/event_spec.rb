@@ -11,6 +11,7 @@ describe 'ServiceNow reporting: event management' do
       skip_certificate_validation: Helpers.skip_cert_check?,
     }
   end
+
   let(:setup_manifest) do
     to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration::event_management', params))
   end
@@ -69,6 +70,113 @@ describe 'ServiceNow reporting: event management' do
     it 'does not send an event' do
       trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+  end
+
+  context 'when failures is enabled' do
+    let(:params) { super().merge('event_creation_conditions' => ['failures']) }
+
+    it 'sends an event when there is a failure' do
+      # make sure site pp reflects a failure
+      set_sitepp_content("notify {'foo")
+      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      event = Helpers.get_single_record('em_event', query)
+      expect(event['type']).to eql('node_report_failed')
+    end
+
+    it 'does not send on an intentional change' do
+      set_sitepp_content(declare('notify', 'foo'))
+      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+
+    context 'and puppet has corrective changes' do
+      corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
+      include_context 'corrective change setup', corr_hash
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
+    end
+  end
+
+  context 'when never is enabled' do
+    let(:params) { super().merge('event_creation_conditions' => ['never']) }
+
+    it 'does not send an event' do
+      trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+  end
+
+  context 'when intentional change is enabled' do
+    let(:params) { super().merge('event_creation_conditions' => ['intentional_changes']) }
+
+    it 'sends an event on an intentional change' do
+      set_sitepp_content(declare('notify', 'foo'))
+      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      event = Helpers.get_single_record('em_event', query)
+      expect(event['type']).to eql('node_report_intentional_changes')
+    end
+
+    it 'does not send an event on a failure' do
+      # make sure site pp reflects a failure
+      set_sitepp_content("notify {'foo")
+      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+
+    context 'and puppet has corrective changes' do
+      corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
+      include_context 'corrective change setup', corr_hash
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
+    end
+  end
+
+  context 'when corrective changes is enabled' do
+    let(:params) { super().merge('event_creation_conditions' => ['corrective_changes']) }
+
+    corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
+    include_context 'corrective change setup', corr_hash
+    it 'sends an event on a correctional change' do
+      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      event = Helpers.get_single_record('em_event', query)
+      expect(event['type']).to eql('node_report_corrective_changes')
+    end
+
+    it 'does not send an event on intentional change' do
+      set_sitepp_content(declare('notify', 'foo'))
+      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+
+    it 'does not send an event when there is a failure' do
+      # make sure site pp reflects a failure
+      set_sitepp_content("notify {'foo")
+      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    end
+  end
+
+  context 'when always is enabled' do
+    let(:params) { super().merge('event_creation_conditions' => ['always']) }
+
+    it 'sends an event when there is a failure' do
+      # make sure site pp reflects a failure
+      set_sitepp_content("notify {'foo")
+      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      event = Helpers.get_single_record('em_event', query)
+      expect(event['type']).to eql('node_report_failed')
+    end
+
+    it 'sends an event on an intentional change' do
+      set_sitepp_content(declare('notify', 'foo'))
+      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      event = Helpers.get_single_record('em_event', query)
+      expect(event['type']).to eql('node_report_intentional_changes')
     end
   end
 end

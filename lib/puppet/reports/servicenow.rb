@@ -20,6 +20,22 @@ Puppet::Reports.register_report(:servicenow) do
   end
 
   def process_event_management(settings_hash)
+    event_creation_conditions = settings_hash['event_creation_conditions']
+
+    unless event_creation_conditions.is_a?(Array)
+      raise "settings['event_creation_conditions'] must be an array, got #{event_creation_conditions}"
+    end
+
+    Puppet.info(sn_log_entry("event creation conditions: #{event_creation_conditions}"))
+
+    satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, event_creation_conditions, transaction_completed)
+
+    if satisfied_conditions.empty?
+      Puppet.info(sn_log_entry('decision: Do not create event'))
+      # do not create an event
+      return false
+    end
+
     event_data = {
       'source'          => 'Puppet',
       'type'            => event_type(resource_statuses, status),

@@ -15,7 +15,7 @@
 #   'pending_intentional_changes'
 #       Create an incident if the report contains at least one intentional change
 #       that wasn't applied because of noop
-type Servicenow_reporting_integration::IncidentCreationConditions = Array[Enum[
+type Servicenow_reporting_integration::ReportCategories = Array[Enum[
   'always',
   'never',
   'failures',

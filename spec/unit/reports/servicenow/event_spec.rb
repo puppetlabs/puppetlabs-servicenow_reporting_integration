@@ -242,4 +242,180 @@ describe 'ServiceNow report processor: event_management mode' do
       end
     end
   end
+
+  context "when 'failures' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['failures']) }
+
+    it 'sends an event when there is a failure' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false, false)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_failed')
+      end
+      processor.process
+    end
+
+    it 'does not send an event when there is no failure' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', true)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
+  context "when 'always' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['always']) }
+
+    it 'sends an event when there is a failure' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false, false)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_failed')
+      end
+      processor.process
+    end
+
+    it 'sends an event on corrective/intentional change' do
+      mock_event_as_resource_status(processor, 'success', true)
+      allow(processor).to receive(:status).and_return('changed')
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_intentional_changes').or eql('node_report_corrective_changes')
+      end
+      processor.process
+    end
+
+    it 'sends an event on no change' do
+      allow(processor).to receive(:status).and_return('unchanged')
+      mock_event_as_resource_status(processor, 'success', false)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_unchanged')
+      end
+      processor.process
+    end
+  end
+
+  context "when 'never' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['never']) }
+
+    it 'does not send any event report' do
+      mock_event_as_resource_status(processor, 'success', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
+  context "when 'corrective changes' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['corrective_changes']) }
+
+    it 'send an event on corrective change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', true)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_corrective_changes')
+      end
+      processor.process
+    end
+
+    it 'does not send an event on failure, ' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false, false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+    it 'does not send on an intentional change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
+  context "when 'intentional changes' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['intentional_changes']) }
+
+    it 'send a event on intentional change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', false)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_intentional_changes')
+      end
+      processor.process
+    end
+
+    it 'does not send event on failures' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+
+    it 'does not send when there are no changes' do
+      allow(processor).to receive(:status).and_return('unchanged')
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+
+    it 'does not send on correctional change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', true)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
+  context "when 'pending_intentional_changes' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['pending_intentional_changes']) }
+
+    it 'sends an event on intentional_changes with noop enabled' do
+      allow(processor).to receive(:status).and_return('unchanged')
+      allow(processor).to receive(:noop_pending).and_return(true)
+      mock_event_as_resource_status(processor, 'noop', false)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_unchanged')
+      end
+      processor.process
+    end
+
+    it 'does not send event on failures' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+
+    it 'does not send on correctional change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', true)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
+
+  context "when 'pending_corrective_changes' is enabled" do
+    let(:settings_hash) { super().merge('event_creation_conditions' => ['pending_corrective_changes']) }
+
+    it 'corrective_changes with noop enabled' do
+      allow(processor).to receive(:status).and_return('unchanged')
+      allow(processor).to receive(:noop_pending).and_return(true)
+      mock_event_as_resource_status(processor, 'noop', true)
+      expect_sent_event(expected_credentials) do |actual_event|
+        expect(actual_event['type']).to eql('node_report_unchanged')
+      end
+      processor.process
+    end
+
+    it 'does not send event on failures' do
+      allow(processor).to receive(:status).and_return('failed')
+      mock_event_as_resource_status(processor, 'failure', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+
+    it 'does not send on an intentional change' do
+      allow(processor).to receive(:status).and_return('changed')
+      mock_event_as_resource_status(processor, 'success', false)
+      expect(processor).not_to receive(:do_snow_request)
+      processor.process
+    end
+  end
 end

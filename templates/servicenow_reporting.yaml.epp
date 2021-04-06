@@ -27,6 +27,7 @@
       Optional[Integer] $http_read_timeout,
       Optional[Integer] $http_write_timeout,
       Enum['selfsigned', 'truststore', 'none'] $pe_console_cert_validation,
+      Optional[Array[String]] $event_creation_conditions,
       # Extra variables that _aren't_ part of the servicenow_reporting_integration
       # class' parameters go here
       String $report_processor_version,
@@ -63,3 +64,4 @@ http_read_timeout: <%= $http_read_timeout %>
 http_write_timeout: <%= $http_write_timeout %>
 pe_console_cert_validation: <%= $pe_console_cert_validation %>
 report_processor_version: <%= $report_processor_version %>
+event_creation_conditions: <%= $event_creation_conditions %>

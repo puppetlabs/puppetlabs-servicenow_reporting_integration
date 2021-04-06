@@ -82,6 +82,8 @@ class servicenow_reporting_integration::event_management (
   Optional[Variant[Integer[0], Float[0]]] $http_read_timeout                                              = 60,
   Optional[Variant[Integer[0], Float[0]]] $http_write_timeout                                             = 60,
   Enum['selfsigned', 'truststore', 'none'] $pe_console_cert_validation                                    = 'selfsigned',
+  Servicenow_reporting_integration::ReportCategories $event_creation_conditions                           = ['always'],
+
 ) {
   class { 'servicenow_reporting_integration':
     operation_mode                             => 'event_management',
@@ -104,5 +106,6 @@ class servicenow_reporting_integration::event_management (
     http_read_timeout                          => $http_read_timeout,
     http_write_timeout                         => $http_write_timeout,
     pe_console_cert_validation                 => $pe_console_cert_validation,
+    event_creation_conditions                  => $event_creation_conditions,
   }
 }
