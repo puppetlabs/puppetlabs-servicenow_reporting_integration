@@ -200,8 +200,8 @@ module Puppet::Util::Servicenow
   end
   module_function :event_type
 
-  def event_security_string(event_security_string)
-    security_settings = {
+  def event_severity_string(event_severity_string)
+    severity_settings = {
       'Clear' => 0,
       'Critical' => 1,
       'Major' => 2,
@@ -209,7 +209,7 @@ module Puppet::Util::Servicenow
       'Warning' => 4,
       'OK' => 5,
     }
-    security_settings[event_security_string]
+    severity_settings[event_severity_string]
   end
 
   def calculate_event_severity(resource_statuses, settings_hash, transaction_completed)
@@ -222,9 +222,9 @@ module Puppet::Util::Servicenow
     # 5 => OK.......(No severity. An alert is created. The resource is still functional.)
     event_conditions = calculate_event_conditions(resource_statuses)
     # return no_changes_event_severity in the case that there are no changes
-    return event_security_string(settings_hash['failures_event_severity']) if catalog_compilation_failure?(resource_statuses, transaction_completed)
-    return event_security_string(settings_hash['no_changes_event_severity']) unless event_conditions.values.any?
-    event_security_string(event_conditions.select { |_, exists| exists == true }
+    return event_severity_string(settings_hash['failures_event_severity']) if catalog_compilation_failure?(resource_statuses, transaction_completed)
+    return event_severity_string(settings_hash['no_changes_event_severity']) unless event_conditions.values.any?
+    event_severity_string(event_conditions.select { |_, exists| exists == true }
                     .map { |condition, _| settings_hash[condition + '_event_severity'] }.sort.first)
   end
   module_function :calculate_event_severity
