@@ -8,6 +8,7 @@ The ServiceNow reporting integration module ships with a `servicenow` report pro
 2. [Setup](#setup)
     * [Events](#events)
     * [Incidents](#incidents)
+    * [Filtering](#filtering)
 3. [Troubleshooting](#troubleshooting)
 4. [Development](#development)
 5. [Known Issues](#known-issues)
@@ -89,6 +90,10 @@ Each incident will include the following information provided by Puppet:
   * __Node__: the fqdn of the node the agent ran on
   * __Report Time__: The timestamp of the report to help find the report in the console
 * __Description__: See the description section from event management above. Incidents will get the same description
+
+### Filtering
+
+For both incidents and events, you can filter sending reports on the environment using an allow_list and block_list. You can set these lists in the module's parameters. The allow_list is defaulted to ['all'] and the block_list is defaulted to ['none']. If you have specific environment filters, you can add them to the list. You can also use wildcards (ie. \*filter\*).
 
 ## Troubleshooting
 

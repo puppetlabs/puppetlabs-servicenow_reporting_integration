@@ -49,6 +49,8 @@ def default_settings_hash
     'http_read_timeout'                          => 60,
     'http_write_timeout'                         => 60,
     'event_creation_conditions'                  => ['always'],
+    'allow_list'                                 => ['all'],
+    'block_list'                                 => ['none'],
   }
 end
 

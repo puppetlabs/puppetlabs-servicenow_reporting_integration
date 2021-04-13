@@ -120,4 +120,23 @@ describe 'ServiceNow report processor: miscellaneous tests' do
       end
     end
   end
+
+  context 'filters environment via allow and block lists' do
+    [
+      { environment: 'production', allow_list: ['all'], block_list: ['test'], expected_value: false },
+      { environment: 'production', allow_list: ['none'], block_list: ['test'], expected_value: true },
+      { environment: 'production', allow_list: ['production'], block_list: ['test'], expected_value: false },
+      { environment: '1.0-release-2', allow_list: ['*release*'], block_list: ['test'], expected_value: false },
+      { environment: 'production', allow_list: ['release'], block_list: ['all'], expected_value: true },
+      { environment: 'production', allow_list: ['production'], block_list: ['none'], expected_value: false },
+      { environment: 'production', allow_list: ['release'], block_list: ['production'], expected_value: true },
+      { environment: 'release-2', allow_list: ['production'], block_list: ['release*'], expected_value: true },
+      { environment: '1.0-release', allow_list: ['*release'], block_list: ['*release'], expected_value: true },
+      { environment: '1.0-prod-4', allow_list: ['none'], block_list: ['none'], expected_value: true },
+    ].each do |test_case|
+      it "When environment is #{test_case[:environment]}, and allow_list is set to #{test_case[:allow_list]} and block_list is set to #{test_case[:block_list]}, expect to return #{test_case[:expected_value]}" do
+        expect(Puppet::Util::Servicenow.env_filter_not_allowed?(test_case[:environment], test_case[:allow_list], test_case[:block_list])).to be test_case[:expected_value]
+      end
+    end
+  end
 end

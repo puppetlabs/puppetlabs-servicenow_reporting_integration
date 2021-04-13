@@ -19,6 +19,8 @@ class servicenow_reporting_integration (
   Optional[Variant[Integer[0], Float[0]]] $http_read_timeout                                              = 60,
   Optional[Variant[Integer[0], Float[0]]] $http_write_timeout                                             = 60,
   Enum['selfsigned', 'truststore', 'none'] $pe_console_cert_validation                                    = 'selfsigned',
+  Optional[Array[String[1]]] $allow_list                                                                  = ['all'],
+  Optional[Array[String[1]]] $block_list                                                                  = ['none'],
   # PARAMETERS SPECIFIC TO INCIDENT_MANAGEMENT
   Optional[String[1]] $caller_id                                                                          = undef,
   Optional[String[1]] $category                                                                           = undef,
@@ -129,6 +131,8 @@ class servicenow_reporting_integration (
       http_write_timeout                         => $http_write_timeout,
       pe_console_cert_validation                 => $pe_console_cert_validation,
       event_creation_conditions                  => $event_creation_conditions,
+      allow_list                                 => $allow_list,
+      block_list                                 => $block_list,
       }),
     notify       => $settings_file_notify,
   }
