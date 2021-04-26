@@ -49,7 +49,7 @@ By default each event will include the following information:
   * __pending_intentional_changes__: All of the resource events that were triggered by pending (noop) intentional changes.
   * __failures__: All of the resources events that were triggered by resource failures.
 
-The module will send a single event for every Puppet run on every node. If nothing interesting such as changes or a failure happened in a given Puppet run then the event type will be `node_report_unchanged`, there will be no resources listed in the description, and the report severity default value will be `OK`.
+By default, the event_creation_conditions is set to ['always']. This means the module will send a single event for every Puppet run on every node. If you would like to filter on the types of reports being sent, the other available types are: `corrective_changes`, `intentional_changes`, `pending_corrective_changes`, `pending_intentional_changes`, and `failures`. You can set the filter in the module's parameters. If nothing interesting such as changes or a failure happened in a given Puppet run then the event type will be `node_report_unchanged`, there will be no resources listed in the description, and the report severity default value will be `OK`.
 
 If a change happens then the event type and severity will be updated, and any resources that changed will be listed in the description.
 
