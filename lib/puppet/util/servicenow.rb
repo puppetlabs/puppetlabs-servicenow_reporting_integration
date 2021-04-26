@@ -392,6 +392,31 @@ module Puppet::Util::Servicenow
     resource_statuses.empty? && !transaction_completed
   end
   module_function :catalog_compilation_failure?
+
+  def environment_matched?(environment, allow, block)
+    return true if allow == 'none' || block == 'all'
+    return false if block == 'none' || allow == 'all'
+    return true if File.fnmatch(block, environment)
+    return false if File.fnmatch(allow, environment)
+  rescue e
+    raise e.message, 'Error with environment filter. Please look over allow_list and block_list configurations'
+  end
+  module_function :environment_matched?
+
+  def env_filter_not_allowed?(environment, allow_list, block_list)
+    blocked = false
+    if allow_list.length >= block_list.length
+      allow_list.zip(block_list) do |allow, block|
+        blocked = environment_matched?(environment, allow, block)
+      end
+    elsif block_list.length > allow_list.length
+      block_list.zip(allow_list) do |block, allow|
+        blocked = environment_matched?(environment, block, allow)
+      end
+    end
+    blocked
+  end
+  module_function :env_filter_not_allowed?
 end
 
 # takes the instance string from the settings and prepends 'https://' if not already present.

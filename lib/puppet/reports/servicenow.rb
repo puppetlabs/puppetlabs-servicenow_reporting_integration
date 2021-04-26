@@ -29,8 +29,9 @@ Puppet::Reports.register_report(:servicenow) do
     Puppet.info(sn_log_entry("event creation conditions: #{event_creation_conditions}"))
 
     satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, event_creation_conditions, transaction_completed)
+    exists_in_blocked_list = env_filter_not_allowed?(environment, settings['allow_list'], settings['block_list'])
 
-    if satisfied_conditions.empty?
+    if satisfied_conditions.empty? || exists_in_blocked_list
       Puppet.info(sn_log_entry('decision: Do not create event'))
       # do not create an event
       return false
@@ -92,8 +93,9 @@ Puppet::Reports.register_report(:servicenow) do
     Puppet.info(sn_log_entry("incident creation conditions: #{incident_creation_conditions}"))
 
     satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, incident_creation_conditions, transaction_completed)
+    exists_in_blocked_list = env_filter_not_allowed?(environment, settings['allow_list'], settings['block_list'])
 
-    if satisfied_conditions.empty?
+    if satisfied_conditions.empty? || exists_in_blocked_list
       Puppet.info(sn_log_entry('decision: Do not create incident'))
       # do not create an incident
       return false
