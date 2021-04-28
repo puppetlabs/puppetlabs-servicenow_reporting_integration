@@ -23,13 +23,13 @@ Puppet::Reports.register_report(:servicenow) do
     event_creation_conditions = settings_hash['event_creation_conditions']
 
     unless event_creation_conditions.is_a?(Array)
-      raise "settings['event_creation_conditions'] must be an array, got #{event_creation_conditions}"
+      raise "settings_hash['event_creation_conditions'] must be an array, got #{event_creation_conditions}"
     end
 
     Puppet.info(sn_log_entry("event creation conditions: #{event_creation_conditions}"))
 
     satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, event_creation_conditions, transaction_completed)
-    exists_in_blocked_list = env_filter_not_allowed?(environment, settings['allow_list'], settings['block_list'])
+    exists_in_blocked_list = env_filter_not_allowed?(environment, settings_hash['allow_list'], settings_hash['block_list'])
 
     if satisfied_conditions.empty? || exists_in_blocked_list
       Puppet.info(sn_log_entry('decision: Do not create event'))
@@ -87,13 +87,13 @@ Puppet::Reports.register_report(:servicenow) do
     incident_creation_conditions = settings_hash['incident_creation_conditions']
 
     unless incident_creation_conditions.is_a?(Array)
-      raise "settings['incident_creation_conditions'] must be an array, got #{incident_creation_conditions}"
+      raise "settings_hash['incident_creation_conditions'] must be an array, got #{incident_creation_conditions}"
     end
 
     Puppet.info(sn_log_entry("incident creation conditions: #{incident_creation_conditions}"))
 
     satisfied_conditions = calculate_satisfied_conditions(status, resource_statuses, incident_creation_conditions, transaction_completed)
-    exists_in_blocked_list = env_filter_not_allowed?(environment, settings['allow_list'], settings['block_list'])
+    exists_in_blocked_list = env_filter_not_allowed?(environment, settings_hash['allow_list'], settings_hash['block_list'])
 
     if satisfied_conditions.empty? || exists_in_blocked_list
       Puppet.info(sn_log_entry('decision: Do not create incident'))

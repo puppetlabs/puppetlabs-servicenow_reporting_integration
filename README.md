@@ -93,7 +93,7 @@ Each incident will include the following information provided by Puppet:
 
 ### Filtering
 
-For both incidents and events, you can filter sending reports on the environment using an allow_list and block_list. You can set these lists in the module's parameters. The allow_list is defaulted to ['all'] and the block_list is defaulted to ['none']. If you have specific environment filters, you can add them to the list. You can also use wildcards (ie. \*filter\*).
+For both incidents and events, you can filter sending reports on the environment using an allow_list and block_list. You can set these lists in the module's parameters. The allow_list is defaulted to ['all'] and the block_list is defaulted to ['none']. If you have specific environment filters, you can add them to the list. You can also use wildcards (ie. ['*env_filter'], ['env_filter*'], ['*env_filter*']).
 
 ## Troubleshooting
 

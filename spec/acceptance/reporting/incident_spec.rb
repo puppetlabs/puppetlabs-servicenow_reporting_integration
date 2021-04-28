@@ -205,4 +205,70 @@ describe 'ServiceNow reporting: incident creation' do
       end
     end
   end
+
+  context 'filters environment with allow_list and block_list' do
+    include_context 'incident query setup'
+    context "when allow_list = ['all'], and incident_creation_conditions is default; sends an event" do
+      let(:params) { super().merge('allow_list' => ['all']) }
+
+      include_examples 'ictc', report_label: 'failures'
+      include_examples 'ictc', report_label: 'corrective_changes'
+      include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+      include_examples 'ictc', report_label: 'no_changes', noop_test: true
+    end
+
+    context "when allow_list == ['none'] and block_list == ['env_filter']" do
+      let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['none'], 'block_list' => ['env_filter']) }
+
+      include_examples 'ictc', report_label: 'failures', noop_test: true
+      include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+      include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+      include_examples 'ictc', report_label: 'no_changes', noop_test: true
+    end
+
+    # context 'when allow_list matches environment' do
+    #   let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['production']) }
+
+    #   include_examples 'ictc', report_label: 'failures'
+    #   include_examples 'ictc', report_label: 'corrective_changes'
+    #   include_examples 'ictc', report_label: 'intentional_changes'
+    #   include_examples 'ictc', report_label: 'no_changes'
+    # end
+
+    context 'when allow_list wildcard matches environment' do
+      let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['prod*']) }
+
+      include_examples 'ictc', report_label: 'failures'
+      include_examples 'ictc', report_label: 'corrective_changes'
+      include_examples 'ictc', report_label: 'intentional_changes'
+      include_examples 'ictc', report_label: 'no_changes'
+    end
+
+    context "when block_list == ['all']" do
+      let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['prod*'], 'block_list' => ['all']) }
+
+      include_examples 'ictc', report_label: 'failures', noop_test: true
+      include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+      include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+      include_examples 'ictc', report_label: 'no_changes', noop_test: true
+    end
+
+    # context 'when block_list matches environment' do
+    #   let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['dev'], 'block_list' => ['production']) }
+
+    #   include_examples 'ictc', report_label: 'failures', noop_test: true
+    #   include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+    #   include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+    #   include_examples 'ictc', report_label: 'no_changes', noop_test: true
+    # end
+
+    context 'when block_list wildcard matches environment' do
+      let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['dev'], 'block_list' => ['*tion', '*od']) }
+
+      include_examples 'ictc', report_label: 'failures', noop_test: true
+      include_examples 'ictc', report_label: 'corrective_changes', noop_test: true
+      include_examples 'ictc', report_label: 'intentional_changes', noop_test: true
+      include_examples 'ictc', report_label: 'no_changes', noop_test: true
+    end
+  end
 end
