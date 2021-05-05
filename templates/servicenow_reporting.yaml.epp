@@ -67,5 +67,5 @@ http_write_timeout: <%= $http_write_timeout %>
 pe_console_cert_validation: <%= $pe_console_cert_validation %>
 report_processor_version: <%= $report_processor_version %>
 event_creation_conditions: <%= $event_creation_conditions %>
-allow_list: <%= $allow_list %>
-block_list: <%= $block_list %>
+allow_list: <%= $allow_list.map |$filter|{ "'${filter}'"} %>
+block_list: <%= $block_list.map |$filter|{ "'${filter}'"} %>

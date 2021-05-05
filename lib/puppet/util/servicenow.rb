@@ -414,6 +414,7 @@ module Puppet::Util::Servicenow
         blocked = environment_matched?(environment, block, allow)
       end
     end
+    Puppet.info(sn_log_entry("Environment filter not allowed: #{blocked}"))
     blocked
   end
   module_function :env_filter_not_allowed?

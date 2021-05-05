@@ -90,14 +90,14 @@ describe 'ServiceNow reporting: event management' do
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
-    context 'and puppet has corrective changes' do
-      corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
-      include_context 'corrective change setup', corr_hash
-      it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [2])
-        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
-      end
-    end
+    # context 'and puppet has corrective changes' do
+    #   corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
+    #   include_context 'corrective change setup', corr_hash
+    #   it 'does not send an event' do
+    #     trigger_puppet_run(master, acceptable_exit_codes: [2])
+    #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    #   end
+    # end
   end
 
   context 'when never is enabled' do
@@ -126,14 +126,14 @@ describe 'ServiceNow reporting: event management' do
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
-    context 'and puppet has corrective changes' do
-      corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
-      include_context 'corrective change setup', corr_hash
-      it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [2])
-        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
-      end
-    end
+    # context 'and puppet has corrective changes' do
+    #   corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
+    #   include_context 'corrective change setup', corr_hash
+    #   it 'does not send an event' do
+    #     trigger_puppet_run(master, acceptable_exit_codes: [2])
+    #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    #   end
+    # end
   end
 
   context 'when corrective changes is enabled' do
@@ -153,12 +153,12 @@ describe 'ServiceNow reporting: event management' do
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
-    it 'does not send an event when there is a failure' do
-      # make sure site pp reflects a failure
-      set_sitepp_content("notify {'foo")
-      trigger_puppet_run(master, acceptable_exit_codes: [1])
-      expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
-    end
+    # it 'does not send an event when there is a failure' do
+    #   # make sure site pp reflects a failure
+    #   set_sitepp_content("notify {'foo")
+    #   trigger_puppet_run(master, acceptable_exit_codes: [1])
+    #   expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    # end
   end
 
   context 'when always is enabled' do
@@ -177,6 +177,83 @@ describe 'ServiceNow reporting: event management' do
       trigger_puppet_run(master, acceptable_exit_codes: [2])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_intentional_changes')
+    end
+  end
+
+  context 'filters environment with allow_list and block_list' do
+    context "when allow_list == ['all']" do
+      let(:params) { super().merge('allow_list' => ['all']) }
+
+      it 'always sends an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+        event = Helpers.get_single_record('em_event', query)
+        expect(event['type']).not_to be_empty
+      end
+    end
+
+    context "when allow_list == ['none'] and block_list == ['env_filter']" do
+      let(:params) { super().merge('allow_list' => ['none'], 'block_list' => ['env_filter']) }
+
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
+    end
+
+    # context 'when allow_list matches environment' do
+    #   let(:params) { super().merge('allow_list' => ['production']) }
+
+    #   it 'sends an event' do
+    #     trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+    #     event = Helpers.get_single_record('em_event', query)
+    #     expect(event['type']).not_to be_empty
+    #   end
+    # end
+
+    context 'when allow_list wildcard matches environment' do
+      let(:params) { super().merge('allow_list' => ['prod*']) }
+
+      it 'sends an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+        event = Helpers.get_single_record('em_event', query)
+        expect(event['type']).not_to be_empty
+      end
+    end
+
+    context "when block_list == ['all']" do
+      let(:params) { super().merge('allow_list' => ['prod*'], 'block_list' => ['all']) }
+
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
+    end
+
+    # context 'when block_list matches environment' do
+    #   let(:params) { super().merge('allow_list' => ['dev'], 'block_list' => ['production']) }
+
+    #   it 'does not send an event' do
+    #     trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+    #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+    #   end
+    # end
+
+    context 'when block_list wildcard matches environment' do
+      let(:params) { super().merge('allow_list' => ['dev'], 'block_list' => ['*tion', '*od']) }
+
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
+    end
+
+    context "when block_list and allow_list == ['none']" do
+      let(:params) { super().merge('allow_list' => ['none'], 'block_list' => ['none']) }
+
+      it 'does not send an event' do
+        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
+      end
     end
   end
 end
