@@ -1,6 +1,6 @@
 {
   "name": "puppetlabs-servicenow_reporting_integration",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "Puppet, Inc.",
   "summary": "A module that allows Puppet to create a ServiceNow incident from an interesting Puppet report",
   "license": "Apache-2.0",
