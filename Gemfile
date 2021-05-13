@@ -26,14 +26,14 @@ group :development do
   gem "rb-readline", '= 0.5.5',                                  require: false, platforms: [:mswin, :mingw, :x64_mingw]
   # Temporarily setting puppet_litmus version to 0.26.0 or older because new litmus version changes where the inventory file gets
   # created/the name changes to litmus_inventory.yml which is not compatible with the current tests.
-  gem "puppet_litmus", '~> 0.18', '<= 0.26.0',                    require: false, platforms: [:ruby]
+  gem "puppet_litmus", '~> 0.18', '<= 0.26.0',                   require: false, platforms: [:ruby]
   gem "puppet-module-posix-default-r#{minor_version}", '~> 0.4', require: false, platforms: [:ruby]
   gem "puppet-module-posix-dev-r#{minor_version}", '~> 0.4',     require: false, platforms: [:ruby]
   gem "puppet-module-win-default-r#{minor_version}", '~> 0.4',   require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "puppet-module-win-dev-r#{minor_version}", '~> 0.4',       require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "rspec_junit_formatter",                                   require: false
+  gem "pdk",                                                     require: false
 end
-
 
 
 puppet_version = ENV['PUPPET_GEM_VERSION']
