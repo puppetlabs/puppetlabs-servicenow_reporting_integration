@@ -1,5 +1,3 @@
-# rubocop:disable Style/AccessorMethodName
-
 require 'support/acceptance/helpers'
 require 'support/acceptance/shared_examples'
 require 'support/acceptance/shared_contexts'

@@ -32,7 +32,7 @@ module Puppet::Util::Servicenow
     # unaffected.
     hiera_eyaml_config = nil
     begin
-      # Note: If hiera-eyaml config doesn't exist, then load_config_file returns
+      # NOTE: If hiera-eyaml config doesn't exist, then load_config_file returns
       # the hash {:options => {}, :sources => []}
       hiera_eyaml_config = Hiera::Backend::Eyaml::Subcommand.load_config_file
     rescue StandardError => e
@@ -137,7 +137,7 @@ module Puppet::Util::Servicenow
                         'line'             => resource.line }
       if resource.failed
         failures << event_summary
-      elsif resource.events.select { |event| event.status == 'noop' }.count > 0
+      elsif resource.events.count { |event| event.status == 'noop' } > 0
         (resource.corrective_change == true) ? (pending_corrective_changes << event_summary) : (pending_intentional_changes << event_summary)
       else
         (resource.corrective_change == true) ? (corrective_changes << event_summary) : (intentional_changes << event_summary)
@@ -166,7 +166,7 @@ module Puppet::Util::Servicenow
       'pending_intentional_changes' => false,
     }
 
-    resource_statuses.values.each do |resource|
+    resource_statuses.each_value do |resource|
       resource.events.each do |event|
         next if event.status == 'audit'
         # event.status == 'success' || 'noop'. Either way, we found a satisfying
@@ -343,7 +343,7 @@ module Puppet::Util::Servicenow
     }
 
     resource_events = []
-    resource_statuses.values.each do |resource|
+    resource_statuses.each_value do |resource|
       resource.events.each do |event|
         # Some event fields are not relevant when it comes to determining
         # whether two reports are identical. We delete these unnecessary

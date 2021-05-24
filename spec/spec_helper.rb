@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.configure do |c|
-  # Use rspec mocks instead of mocha as per https://github.com/puppetlabs/puppetlabs_spec_helper#mock_with
-  # This configuration must be specified before the puppetlabs_spec_helper gem is loaded to avoid
-  # the deprecation warning.
   c.mock_with :rspec
 end
 
@@ -50,7 +47,6 @@ RSpec.configure do |c|
   c.filter_run_excluding(bolt: true) unless ENV['GEM_BOLT']
   c.after(:suite) do
   end
-  c.confdir = '.'
 end
 
 # Ensures that a module is defined
