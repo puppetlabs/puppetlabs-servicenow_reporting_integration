@@ -79,7 +79,7 @@ RSpec.shared_examples 'ictc' do |report_label: nil, noop_test: false|
     end
 
     # Include the setup
-    if report_label =~ %r{corrective}
+    if report_label.include?('corrective')
       include_context 'corrective change setup', resource_hash
     end
     include_context 'incident query setup'

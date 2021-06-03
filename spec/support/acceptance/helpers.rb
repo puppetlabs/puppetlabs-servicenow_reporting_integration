@@ -41,6 +41,7 @@ class Target
 end
 
 class TargetNotFoundError < StandardError; end
+
 module TargetHelpers
   def master
     target('master', 'acceptance:provision_vms', 'master')

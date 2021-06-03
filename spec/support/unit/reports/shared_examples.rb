@@ -85,6 +85,7 @@ RSpec.shared_examples 'ictc' do |report_label: nil, noop_test: false|
           resource_statuses = instance_double('resource_statuses')
           allow(resource_statuses).to receive(:empty?).and_return(false)
           allow(resource_statuses).to receive(:values).and_return([])
+          allow(resource_statuses).to receive(:each_value).and_return([])
           allow(processor).to receive(:status).and_return('unchanged')
           allow(processor).to receive(:noop_pending).and_return(false)
           allow(processor).to receive(:resource_statuses).and_return(resource_statuses)
