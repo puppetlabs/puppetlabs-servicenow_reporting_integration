@@ -1,6 +1,6 @@
 # puppetlabs-servicenow_reporting_integration
 
-The ServiceNow reporting integration module ships with a `servicenow` report processor that can send one of two kinds of information back to Servicenow. It can send events that are handled by Servicenow to create Alerts and Incidents, or you can create Incidents directly.
+The ServiceNow reporting integration module ships with a `servicenow` [report processor](https://puppet.com/docs/puppet/7/reporting_write_processors.html) that can send one of two kinds of information back to Servicenow. It can send events that are handled by Servicenow to create Alerts and Incidents, or you can create Incidents directly.
 
 #### Table of Contents
 
@@ -22,11 +22,11 @@ The ServiceNow reporting integration module ships with a `servicenow` report pro
 
 1. Install the `puppetlabs-servicenow_reporting_integration` module on your Puppet server.
 
-The module can send events or it can create incidents, but attempting to do both will cause a catalog compilation failure. Please choose which one of the two you would like to do and only classify your Puppet server nodes with one of those classes, either event management, or incident management.
+The module can send events or it can create incidents, but attempting to do both will cause a [catalog compilation](https://puppet.com/docs/puppet/7/subsystem_catalog_compilation.html) failure. Please choose which one of the two you would like to do and only classify your Puppet server nodes with one of those classes, either event management, or incident management.
 
 ### Events
 
-To send events, classify your Puppet servers with the `servicenow_reporting_integration::event_management` class. The minimum parameters you need to configure for the class to work are `instance` (the fqdn of the Servicenow instance), and then `user` and `password`, or you can bypass username/password authentication and use an oauth token using the `oauth_token` parameter.
+To send [events](https://puppet.com/docs/pe/2019.8/analyze_changes_across_runs.html), classify your Puppet servers with the `servicenow_reporting_integration::event_management` class. The minimum parameters you need to configure for the class to work are `instance` (the fqdn of the Servicenow instance), and then `user` and `password`, or you can bypass username/password authentication and use an oauth token using the `oauth_token` parameter.
 
 By default each event will include the following information:
 * __Source__: Puppet
@@ -61,7 +61,7 @@ You can specify the set of facts included in the event description via the `incl
 
 Facts in the description by default are in Yaml format for readability, but this can be changed via the `facts_format` parameter to one of yaml, pretty_json (json with readability line breaks and indentation), or json.
 
-To stop the module from sending any events to Servicenow, you can set the `disabled` parameter to `true`. Simply removing the module from classification on a Puppet server node will not stop the report processor from continuing to send events to Servicenow. To remove the integration permanently, uninstall the module from the environment and remove `servicenow` from the `reports` setting in `puppet.conf`.
+To stop the module from sending any events to Servicenow, you can set the `disabled` parameter to `true`. Removing the module from classification on a Puppet server node will not stop the report processor from continuing to send events to Servicenow. To remove the integration permanently, uninstall the module from the environment and remove `servicenow` from the `reports` setting in [`puppet.conf`](https://puppet.com/docs/puppet/7/config_file_main.html).
 
 ### Incidents
 
