@@ -6,9 +6,9 @@ RSpec.configure do |config|
   include TargetHelpers
 
   config.before(:suite) do
-    # Stop the puppet service on the master to avoid edge-case conflicting
+    # Stop the puppet service on the server to avoid edge-case conflicting
     # Puppet runs (one triggered by service vs one we trigger)
-    master.run_shell('puppet resource service puppet ensure=stopped')
+    server.run_shell('puppet resource service puppet ensure=stopped')
 
     # Some of the tests require an 'unchanged' Puppet run so they use an 'unchanged' site.pp manifest
     # to simulate this scenario. However, our 'unchanged' Puppet run will still include the default
@@ -16,7 +16,7 @@ RSpec.configure do |config|
     # update the reporting module for the tests. To prevent those changes from happening _while_ running
     # the tests, we do a quick Puppet run _before_ all the tests to enact the PE module-specific changes.
     # This way, all of our tests begin with a 'clean' Puppet slate.
-    trigger_puppet_run(master)
+    trigger_puppet_run(server)
   end
 end
 
@@ -30,8 +30,8 @@ def set_sitepp_content(manifest)
   }
   HERE
 
-  master.write_file(content, '/etc/puppetlabs/code/environments/production/manifests/site.pp')
-  master.run_shell('chown pe-puppet /etc/puppetlabs/code/environments/production/manifests/site.pp')
+  server.write_file(content, '/etc/puppetlabs/code/environments/production/manifests/site.pp')
+  server.run_shell('chown pe-puppet /etc/puppetlabs/code/environments/production/manifests/site.pp')
 end
 
 def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
@@ -43,7 +43,7 @@ def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
 end
 
 def clear_reporting_integration_setup
-  master.run_shell('rm -rf /etc/puppetlabs/puppet/servicenow_reporting.yaml')
+  server.run_shell('rm -rf /etc/puppetlabs/puppet/servicenow_reporting.yaml')
   # Delete the 'servicenow' report processor
   reports_setting_manifest = declare(
     'ini_subsetting',
@@ -55,7 +55,7 @@ def clear_reporting_integration_setup
     subsetting: 'servicenow',
     subsetting_separator: ',',
   )
-  master.apply_manifest(to_manifest(reports_setting_manifest), catch_failures: true)
+  server.apply_manifest(to_manifest(reports_setting_manifest), catch_failures: true)
 end
 
 def declare(type, title, params = {})
@@ -82,7 +82,7 @@ end
 METADATA_JSON_PATH = '/etc/puppetlabs/code/environments/production/modules/servicenow_reporting_integration/metadata.json'.freeze
 
 def get_metadata_json
-  raw_metadata_json = master.run_shell("cat #{METADATA_JSON_PATH}").stdout.chomp
+  raw_metadata_json = server.run_shell("cat #{METADATA_JSON_PATH}").stdout.chomp
   JSON.parse(raw_metadata_json)
 end
 

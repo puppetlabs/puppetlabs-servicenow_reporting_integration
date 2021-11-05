@@ -12,7 +12,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
 
     {
       instance: servicenow_instance.uri,
-      pe_console_url: "https://#{master.uri}",
+      pe_console_url: "https://#{server.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: "Sensitive('#{servicenow_config['password']}')",
@@ -29,7 +29,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
 
   it 'has idempotent setup' do
     clear_reporting_integration_setup
-    master.idempotent_apply(setup_manifest)
+    server.idempotent_apply(setup_manifest)
   end
 
   context 'user specifies a hiera-eyaml encrypted password' do
@@ -37,7 +37,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       servicenow_config = servicenow_instance.bolt_config['remote']
       default_params = super().merge('incident_creation_conditions' => ['intentional_changes'])
       password = servicenow_config['password']
-      encrypted_password = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
+      encrypted_password = server.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{password} -o string").stdout
       default_params[:password] = "Sensitive('#{encrypted_password.chomp}')"
       default_params
     end
@@ -54,7 +54,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     # skip the oauth tests if we don't have an oauth token to test with
     servicenow_config = servicenow_instance.bolt_config['remote']
     skip_oauth_tests = false
-    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master.uri))
+    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(server.uri))
     unless using_mock_instance
       skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
     end
@@ -66,7 +66,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       default_params.delete(:user)
       default_params.delete(:password)
       oauth_token = servicenow_config['oauth_token']
-      encryped_token = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
+      encryped_token = server.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{oauth_token} -o string").stdout
       default_params[:oauth_token] = "Sensitive('#{encryped_token.chomp}')"
       default_params[:incident_creation_conditions] = ['intentional_changes']
       default_params
@@ -110,27 +110,27 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     include_context 'reporting test setup'
 
     before(:each) do
-      master.run_shell("rm -f #{created_file_path}")
-      master.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
-      master.write_file(report_processor_implementation, "#{reports_dir}/servicenow.rb")
+      server.run_shell("rm -f #{created_file_path}")
+      server.run_shell("mv #{reports_dir}/servicenow.rb #{reports_dir}/servicenow_current.rb")
+      server.write_file(report_processor_implementation, "#{reports_dir}/servicenow.rb")
 
       # Update the metadata.json version to simulate a report processor change
       new_metadata_json = old_metadata_json.merge('version' => '0.0.0')
-      master.write_file(JSON.pretty_generate(new_metadata_json), METADATA_JSON_PATH)
-      master.run_shell("chown pe-puppet #{reports_dir}/servicenow.rb #{METADATA_JSON_PATH}")
+      server.write_file(JSON.pretty_generate(new_metadata_json), METADATA_JSON_PATH)
+      server.run_shell("chown pe-puppet #{reports_dir}/servicenow.rb #{METADATA_JSON_PATH}")
     end
 
     after(:each) do
-      master.run_shell("rm -f #{created_file_path}")
-      master.run_shell("mv #{reports_dir}/servicenow_current.rb #{reports_dir}/servicenow.rb")
-      master.write_file(JSON.pretty_generate(old_metadata_json), METADATA_JSON_PATH)
+      server.run_shell("rm -f #{created_file_path}")
+      server.run_shell("mv #{reports_dir}/servicenow_current.rb #{reports_dir}/servicenow.rb")
+      server.write_file(JSON.pretty_generate(old_metadata_json), METADATA_JSON_PATH)
     end
 
     it 'picks up those changes' do
-      master.apply_manifest(setup_manifest, catch_failures: true)
-      trigger_puppet_run(master, acceptable_exit_codes: [0])
+      server.apply_manifest(setup_manifest, catch_failures: true)
+      trigger_puppet_run(server, acceptable_exit_codes: [0])
       begin
-        master.run_shell("ls #{created_file_path}")
+        server.run_shell("ls #{created_file_path}")
       rescue => e
         raise "failed to assert that #{created_file_path} was created: #{e}"
       end
@@ -173,8 +173,8 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       end
 
       it 'can still setup the reporting integration' do
-        master.apply_manifest(setup_manifest, catch_failures: true)
-        reports_setting = master.run_shell('puppet config print reports --section master').stdout.chomp
+        server.apply_manifest(setup_manifest, catch_failures: true)
+        reports_setting = server.run_shell('puppet config print reports --section server').stdout.chomp
         expect(reports_setting).to match(%r{servicenow})
       end
     end
@@ -186,7 +186,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     end
 
     it 'certificate validation fails' do
-      master.apply_manifest(setup_manifest, expect_failures: true) do |failure|
+      server.apply_manifest(setup_manifest, expect_failures: true) do |failure|
         expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
         expect(failure['stderr']).to match(%r{SSL_connect returned=1})
       end

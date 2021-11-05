@@ -2,5 +2,4 @@ acceptance:
   provisioner: abs
   images: ['ubuntu-1804-x86_64']
   vars: |
-    roles: ['master']
-    lifetime: 12
+    role: 'server'
