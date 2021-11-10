@@ -17,6 +17,7 @@ begin
   pe_console_url = settings['pe_console_url']
   # The /auth/favicon.ico endpoint is a stable PE console endpoint
   uri = URI.parse("#{pe_console_url}/auth/favicon.ico")
+
   opts = {
     use_ssl:     uri.scheme == 'https',
   }

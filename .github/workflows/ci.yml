@@ -1,17 +1,14 @@
-name: spec
+name: ci
 
-on:
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
   Spec:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        check: [parallel_spec, 'syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop']
-        ruby_version: [2.5.x]
+        check: ['syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop parallel_spec']
+        ruby_version: [2.7.x]
         puppet_gem_version: [~> 6.0]
     steps:
     - uses: actions/checkout@v1
@@ -20,7 +17,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby_version }}
 
-    - name: Spec Tests
+    - name: Static Checks
       uses: puppetlabs/action-litmus_spec@master
       with:
         puppet_gem_version: ${{ matrix.puppet_gem_version }}

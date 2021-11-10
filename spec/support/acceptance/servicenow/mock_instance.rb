@@ -10,7 +10,7 @@ require 'base64'
 class MockServiceNowInstance < Sinatra::Base
   configure do
     set :bind, '0.0.0.0'
-    set :port, 1080
+    set :port, 8000
 
     # Configure https
     set :server_settings,

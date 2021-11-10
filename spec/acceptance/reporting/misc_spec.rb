@@ -7,16 +7,22 @@ describe 'ServiceNow reporting: miscellaneous tests' do
       'sys_id' => 'foo',
     }
   end
+
+  let(:fqdn) do
+    server.run_shell('facter fqdn').stdout.chomp
+  end
+
   let(:params) do
     servicenow_config = servicenow_instance.bolt_config['remote']
 
     {
       instance: servicenow_instance.uri,
-      pe_console_url: "https://#{server.uri}",
+      pe_console_url: "https://#{fqdn}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: "Sensitive('#{servicenow_config['password']}')",
-      skip_certificate_validation: Helpers.skip_cert_check?,
+      skip_certificate_validation: true,
+      pe_console_cert_validation: 'none',
     }
   end
   let(:setup_manifest) do
@@ -54,7 +60,7 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     # skip the oauth tests if we don't have an oauth token to test with
     servicenow_config = servicenow_instance.bolt_config['remote']
     skip_oauth_tests = false
-    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(server.uri))
+    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(server.run_shell('facter fqdn').stdout.chomp))
     unless using_mock_instance
       skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
     end
@@ -180,16 +186,19 @@ describe 'ServiceNow reporting: miscellaneous tests' do
     end
   end
 
-  context 'module fails against container if cert validation on', if: Helpers.skip_cert_check? do
-    let(:params) do
-      super().merge(skip_certificate_validation: false, incident_creation_conditions: ['always'])
-    end
+  # Servicenow_instance.uri has been set to localhost:8000 for testing purposes on the cloud.
+  # This is why the Helpers.skip_cert_check? will always return false. So this test will not work.
 
-    it 'certificate validation fails' do
-      server.apply_manifest(setup_manifest, expect_failures: true) do |failure|
-        expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
-        expect(failure['stderr']).to match(%r{SSL_connect returned=1})
-      end
-    end
-  end
+  # context 'module fails against container if cert validation on' do, if: Helpers.skip_cert_check? do
+  #   let(:params) do
+  #     super().merge(skip_certificate_validation: false, incident_creation_conditions: ['always'])
+  #   end
+
+  #   it 'certificate validation fails' do
+  #     server.apply_manifest(setup_manifest, expect_failures: true) do |failure|
+  #       expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
+  #       expect(failure['stderr']).to match(%r{SSL_connect returned=1})
+  #     end
+  #   end
+  # end
 end

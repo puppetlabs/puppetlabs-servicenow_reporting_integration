@@ -8,12 +8,21 @@ describe 'ServiceNow reporting: event management' do
       instance: servicenow_instance.uri,
       user: servicenow_config['user'],
       password: "Sensitive('#{servicenow_config['password']}')",
-      skip_certificate_validation: Helpers.skip_cert_check?,
+      skip_certificate_validation: true,
+      pe_console_cert_validation: 'none',
     }
   end
 
   let(:setup_manifest) do
     to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_reporting_integration::event_management', params))
+  end
+
+  let(:fqdn) do
+    server.run_shell('facter fqdn').stdout.chomp
+  end
+
+  let(:fqdn_regex) do
+    Regexp.new(Regexp.escape(fqdn))
   end
 
   include_context 'event query setup'
@@ -23,14 +32,13 @@ describe 'ServiceNow reporting: event management' do
     trigger_puppet_run(server, acceptable_exit_codes: [2])
     event = Helpers.get_single_record('em_event', query)
     additional_info = JSON.parse(event['additional_info'])
-
     expect(event['source']).to eql('Puppet')
     expect(event['type']).to eql('node_report_intentional_changes')
     expect(event['severity']).to eql('5')
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty
-    expect(event['event_class']).to match(Regexp.new(Regexp.escape(server.uri)))
-    expect(event['description']).to match(Regexp.new(Regexp.escape(server.uri)))
+    expect(event['event_class']).to match(fqdn_regex)
+    expect(event['description']).to match(fqdn_regex)
     expect(event['description']).to match(%r{Environment: production})
     expect(event['description']).to match(%r{Resource Statuses:})
     expect(event['description']).to match(%r{Environment: production})
@@ -38,19 +46,15 @@ describe 'ServiceNow reporting: event management' do
     expect(event['description']).to match(%r{manifests\/site.pp:2})
     expect(event['description']).to match(%r{== Facts ==})
     expect(event['description']).to match(%r{id: root})
-    expect(event['description']).to match(%r{os.distro:\s+codename:[\s\S]*description})
     expect(additional_info['environment']).to eql('production')
     expect(additional_info['id']).to eql('root')
     expect(additional_info['ipaddress']).to match(%r{^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$})
-    expect(additional_info['os.distro']['codename']).not_to be_empty
     expect(additional_info['report_labels']).to eql('intentional_changes')
     expect(additional_info['corrective_changes'].to_json).should_not be_nil
     expect(additional_info['pending_corrective_changes'].to_json).should_not be_nil
     expect(additional_info['intentional_changes'].to_json).should_not be_nil
     expect(additional_info['pending_intentional_changes'].to_json).should_not be_nil
     expect(additional_info['failures'].to_json).should_not be_nil
-    # Check that the PE console URL is included
-    expect(event['description']).to match(Regexp.new(Regexp.escape(server.uri)))
   end
 
   it 'handles a catalog failure properly' do

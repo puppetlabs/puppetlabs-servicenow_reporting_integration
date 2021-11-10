@@ -1,3 +1,4 @@
+require 'cgi'
 require 'puppet_litmus'
 PuppetLitmus.configure!
 # The Target class and TargetHelpers module are a useful ways
@@ -80,6 +81,33 @@ module LitmusHelpers
 end
 
 module Helpers
+  # params is json
+  def curl_get_records(table, query)
+    endpoint = "/api/now/table/#{table}"
+    query ||= {}.to_json
+    query = JSON.parse(query)
+
+    query = query.map do |name, value|
+      "#{CGI.escape(name.to_s)}=#{CGI.escape(value.to_s)}"
+    end
+
+    query = query.join('&')
+    endpt_with_query = query.length > 1 ? "#{endpoint}?#{query}" : endpoint
+    full_result = server.run_shell("curl -v -i --insecure -u mock_user:mock_password -X GET https://localhost:8000#{endpt_with_query}")
+    full_result = full_result.stdout.split("\n")
+    JSON.parse(full_result[full_result.length - 1])['result']
+  end
+  module_function :curl_get_records
+
+  def get_incident_records(params)
+    table = params['table']
+    query = params['url_params']
+
+    task_result = curl_get_records(table, query)
+    task_result
+  end
+  module_function :get_incident_records
+
   def get_records(table, query)
     params = {
       'table' => table,
@@ -89,8 +117,8 @@ module Helpers
       }.to_json,
     }
 
-    task_result = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', params)
-    task_result.result['result']
+    task_result = curl_get_records(table, params['url_params'])
+    task_result
   end
   module_function :get_records
 
@@ -109,12 +137,8 @@ module Helpers
   module_function :get_single_record
 
   def delete_record(table, sys_id)
-    params = {
-      'table' => table,
-      'sys_id' => sys_id,
-    }
-
-    servicenow_instance.run_bolt_task('servicenow_tasks::delete_record', params)
+    endpoint = "/api/now/table/#{table}/#{sys_id}"
+    server.run_shell("curl -v -i --insecure -u mock_user:mock_password -X DELETE https://localhost:8000#{endpoint}")
   end
   module_function :delete_record
 
