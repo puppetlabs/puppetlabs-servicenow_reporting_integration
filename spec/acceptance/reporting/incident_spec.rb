@@ -27,7 +27,7 @@ describe 'ServiceNow reporting: incident creation' do
 
     {
       instance: servicenow_instance.uri,
-      pe_console_url: "https://#{master.uri}",
+      pe_console_url: "https://#{server.uri}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: "Sensitive('#{servicenow_config['password']}')",

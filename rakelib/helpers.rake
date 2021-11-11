@@ -9,16 +9,16 @@ namespace :acceptance do
   require_relative '../spec/support/acceptance/helpers'
   include TargetHelpers
 
-  desc 'Provisions the VMs. This is currently just the master'
+  desc 'Provisions the VMs. This is currently just the server'
   task :provision_vms do
-    if File.exist?('spec/fixtures/litmus_inventory.yaml')
-    # Check if a master VM's already been setup
+    if File.exist?('../spec/fixtures/litmus_inventory.yaml')
+    # Check if a server VM's already been setup
       begin
-        uri = master.uri
-        puts("A master VM at '#{uri}' has already been set up")
+        uri = server.uri
+        puts("A server VM at '#{uri}' has already been set up")
         next
       rescue TargetNotFoundError
-      # Pass-thru, this means that we haven't set up the master VM
+      # Pass-thru, this means that we haven't set up the server VM
       end
     end
   
@@ -28,12 +28,18 @@ namespace :acceptance do
   
   # TODO: This should be refactored to use the https://github.com/puppetlabs/puppetlabs-peadm
   # module for PE setup
-  desc 'Sets up PE on the master'
+  desc 'Sets up PE on the server'
   task :setup_pe do
-    master.bolt_run_script('spec/support/acceptance/install_pe.sh')
+    include ::BoltSpec::Run
+    inventory_hash = inventory_hash_from_inventory_file
+    target_nodes = find_targets(inventory_hash, 'ssh_nodes')
+
+    config = { 'modulepath' => File.join(Dir.pwd, 'spec', 'fixtures', 'modules') }
+
+    bolt_result = run_plan('servicenow_reporting_integration::acceptance::pe_server', {}, config: config, inventory: inventory_hash.clone)
     # Setup hiera-eyaml config
-    master.run_shell('rm -rf /etc/eyaml')
-    master.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
+    server.run_shell('rm -rf /etc/eyaml')
+    server.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
   end
   
   desc 'Sets up the ServiceNow instance'
@@ -43,10 +49,10 @@ namespace :acceptance do
       # Start the mock ServiceNow instance. If an instance has already been started,
       # then the script will remove the old instance before replacing it with the new
       # one.
-      puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
-      master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
-      master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
-      instance, user, password, token = "#{master.uri}:1080", 'mock_user', 'mock_password', 'mock_token'
+      puts("Starting the mock ServiceNow instance at the server (#{server.uri})")
+      server.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
+      server.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
+      instance, user, password, token = "#{server.uri}:1080", 'mock_user', 'mock_password', 'mock_token'
     else
       # User provided their own ServiceNow instance so make sure that they've also
       # included the instance's credentials
@@ -78,31 +84,31 @@ namespace :acceptance do
         'platform' => 'servicenow'
       },
       'vars' => {
-        'roles' => ['servicenow_instance'],
+        'role' => 'servicenow_instance',
       }
     }]
     write_to_inventory_file(inventory_hash, 'spec/fixtures/litmus_inventory.yaml')
   end
   
-  desc 'Installs the module on the master'
+  desc 'Installs the module on the server'
   task :install_module do
-    Rake::Task['litmus:install_module'].invoke(master.uri)
+    Rake::Task['litmus:install_module'].invoke(server.uri)
   end
   
-  desc 'Reloads puppetserver on the master'
+  desc 'Reloads puppetserver on the server'
   task :reload_module do
-    result = master.run_shell('/opt/puppetlabs/bin/puppetserver reload').stdout.chomp
+    result = server.run_shell('/opt/puppetlabs/bin/puppetserver reload').stdout.chomp
     puts "Error: #{result}" unless result.nil?
   end
   
   desc 'Gets the puppetserver logs for service now'
   task :get_logs do
-    puts master.run_shell('tail -500 /var/log/puppetlabs/puppetserver/puppetserver.log').stdout.chomp
+    puts server.run_shell('tail -500 /var/log/puppetlabs/puppetserver/puppetserver.log').stdout.chomp
   end
   
   desc 'Do an agent run'
   task :agent_run do
-    puts master.run_shell('puppet agent -t').stdout.chomp
+    puts server.run_shell('puppet agent -t').stdout.chomp
   end
   
   desc 'Runs the tests'
@@ -136,7 +142,7 @@ namespace :acceptance do
   desc 'Teardown the setup'
   task :tear_down do
     puts("Tearing down the test infrastructure ...\n")
-    Rake::Task['litmus:tear_down'].invoke(master.uri)
+    Rake::Task['litmus:tear_down'].invoke(server.uri)
     FileUtils.rm_f('spec/fixtures/litmus_inventory.yaml')
   end
   

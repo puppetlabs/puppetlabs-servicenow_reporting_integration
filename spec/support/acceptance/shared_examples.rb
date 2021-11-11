@@ -13,10 +13,10 @@ RSpec.shared_examples 'incident creation test' do |report_status, resource_hash|
                                                       raise "invalid report_status #{report_status}. Valid report statuses are 'noop_pending', 'changed', 'failed'"
                                                     end
 
-    trigger_puppet_run(master, acceptable_exit_codes: puppet_exit_codes)
+    trigger_puppet_run(server, acceptable_exit_codes: puppet_exit_codes)
     incident = Helpers.get_single_record('incident', query)
     expect(incident['short_description']).to match(expected_short_description)
-    expect(incident['description']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(incident['description']).to match(Regexp.new(Regexp.escape(server.uri)))
     expect(incident['caller_id']).to eql(kaller['sys_id'])
 
     unless expected_short_description == %r{unchanged}
@@ -33,8 +33,8 @@ end
 
 RSpec.shared_examples 'settings file validation failure' do
   it 'reports an error and does not setup the report processor' do
-    master.apply_manifest(setup_manifest, expect_failures: true)
-    reports_setting = master.run_shell('puppet config print reports --section master').stdout.chomp
+    server.apply_manifest(setup_manifest, expect_failures: true)
+    reports_setting = server.run_shell('puppet config print reports --section server').stdout.chomp
     expect(reports_setting).not_to match(%r{servicenow})
   end
 end
@@ -48,7 +48,7 @@ RSpec.shared_examples 'no incident' do |report_status|
                    [0, 2]
                  end
     num_incidents_before_puppet_run = Helpers.get_records('incident', '').length
-    trigger_puppet_run(master, acceptable_exit_codes: exit_codes)
+    trigger_puppet_run(server, acceptable_exit_codes: exit_codes)
     num_incidents_after_puppet_run = Helpers.get_records('incident', '').length
     expect(num_incidents_after_puppet_run).to eql(num_incidents_before_puppet_run)
   end

@@ -20,7 +20,7 @@ describe 'ServiceNow reporting: event management' do
 
   it 'sends a node_report event' do
     set_sitepp_content(declare('notify', 'foo'))
-    trigger_puppet_run(master, acceptable_exit_codes: [2])
+    trigger_puppet_run(server, acceptable_exit_codes: [2])
     event = Helpers.get_single_record('em_event', query)
     additional_info = JSON.parse(event['additional_info'])
 
@@ -29,8 +29,8 @@ describe 'ServiceNow reporting: event management' do
     expect(event['severity']).to eql('5')
     expect(event['message_key']).not_to be_empty
     expect(event['node']).not_to be_empty
-    expect(event['event_class']).to match(Regexp.new(Regexp.escape(master.uri)))
-    expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(event['event_class']).to match(Regexp.new(Regexp.escape(server.uri)))
+    expect(event['description']).to match(Regexp.new(Regexp.escape(server.uri)))
     expect(event['description']).to match(%r{Environment: production})
     expect(event['description']).to match(%r{Resource Statuses:})
     expect(event['description']).to match(%r{Environment: production})
@@ -50,12 +50,12 @@ describe 'ServiceNow reporting: event management' do
     expect(additional_info['pending_intentional_changes'].to_json).should_not be_nil
     expect(additional_info['failures'].to_json).should_not be_nil
     # Check that the PE console URL is included
-    expect(event['description']).to match(Regexp.new(Regexp.escape(master.uri)))
+    expect(event['description']).to match(Regexp.new(Regexp.escape(server.uri)))
   end
 
   it 'handles a catalog failure properly' do
     set_sitepp_content("notify {'foo")
-    trigger_puppet_run(master, acceptable_exit_codes: [1])
+    trigger_puppet_run(server, acceptable_exit_codes: [1])
     set_sitepp_content('')
     event = Helpers.get_single_record('em_event', query)
 
@@ -68,7 +68,7 @@ describe 'ServiceNow reporting: event management' do
     let(:params) { super().merge('disabled' => true) }
 
     it 'does not send an event' do
-      trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+      trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
   end
@@ -79,14 +79,14 @@ describe 'ServiceNow reporting: event management' do
     it 'sends an event when there is a failure' do
       # make sure site pp reflects a failure
       set_sitepp_content("notify {'foo")
-      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      trigger_puppet_run(server, acceptable_exit_codes: [1])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_failed')
     end
 
     it 'does not send on an intentional change' do
       set_sitepp_content(declare('notify', 'foo'))
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      trigger_puppet_run(server, acceptable_exit_codes: [2])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
@@ -94,7 +94,7 @@ describe 'ServiceNow reporting: event management' do
     #   corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
     #   include_context 'corrective change setup', corr_hash
     #   it 'does not send an event' do
-    #     trigger_puppet_run(master, acceptable_exit_codes: [2])
+    #     trigger_puppet_run(server, acceptable_exit_codes: [2])
     #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     #   end
     # end
@@ -104,7 +104,7 @@ describe 'ServiceNow reporting: event management' do
     let(:params) { super().merge('event_creation_conditions' => ['never']) }
 
     it 'does not send an event' do
-      trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+      trigger_puppet_run(server, acceptable_exit_codes: [0, 1, 2])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
   end
@@ -114,7 +114,7 @@ describe 'ServiceNow reporting: event management' do
 
     it 'sends an event on an intentional change' do
       set_sitepp_content(declare('notify', 'foo'))
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      trigger_puppet_run(server, acceptable_exit_codes: [2])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_intentional_changes')
     end
@@ -122,7 +122,7 @@ describe 'ServiceNow reporting: event management' do
     it 'does not send an event on a failure' do
       # make sure site pp reflects a failure
       set_sitepp_content("notify {'foo")
-      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      trigger_puppet_run(server, acceptable_exit_codes: [1])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
@@ -130,7 +130,7 @@ describe 'ServiceNow reporting: event management' do
     #   corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
     #   include_context 'corrective change setup', corr_hash
     #   it 'does not send an event' do
-    #     trigger_puppet_run(master, acceptable_exit_codes: [2])
+    #     trigger_puppet_run(server, acceptable_exit_codes: [2])
     #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     #   end
     # end
@@ -142,21 +142,21 @@ describe 'ServiceNow reporting: event management' do
     corr_hash = { 'type' => 'file', 'title' => '/tmp/corrective_change', 'params' => { 'content' => 'foo' } }
     include_context 'corrective change setup', corr_hash
     it 'sends an event on a correctional change' do
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      trigger_puppet_run(server, acceptable_exit_codes: [2])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_corrective_changes')
     end
 
     it 'does not send an event on intentional change' do
       set_sitepp_content(declare('notify', 'foo'))
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      trigger_puppet_run(server, acceptable_exit_codes: [2])
       expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     end
 
     # it 'does not send an event when there is a failure' do
     #   # make sure site pp reflects a failure
     #   set_sitepp_content("notify {'foo")
-    #   trigger_puppet_run(master, acceptable_exit_codes: [1])
+    #   trigger_puppet_run(server, acceptable_exit_codes: [1])
     #   expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     # end
   end
@@ -167,14 +167,14 @@ describe 'ServiceNow reporting: event management' do
     it 'sends an event when there is a failure' do
       # make sure site pp reflects a failure
       set_sitepp_content("notify {'foo")
-      trigger_puppet_run(master, acceptable_exit_codes: [1])
+      trigger_puppet_run(server, acceptable_exit_codes: [1])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_failed')
     end
 
     it 'sends an event on an intentional change' do
       set_sitepp_content(declare('notify', 'foo'))
-      trigger_puppet_run(master, acceptable_exit_codes: [2])
+      trigger_puppet_run(server, acceptable_exit_codes: [2])
       event = Helpers.get_single_record('em_event', query)
       expect(event['type']).to eql('node_report_intentional_changes')
     end
@@ -185,7 +185,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['all']) }
 
       it 'always sends an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 1, 2])
         event = Helpers.get_single_record('em_event', query)
         expect(event['type']).not_to be_empty
       end
@@ -195,7 +195,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['none'], 'block_list' => ['env_filter']) }
 
       it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
         expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
       end
     end
@@ -204,7 +204,7 @@ describe 'ServiceNow reporting: event management' do
     #   let(:params) { super().merge('allow_list' => ['production']) }
 
     #   it 'sends an event' do
-    #     trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+    #     trigger_puppet_run(server, acceptable_exit_codes: [0, 1, 2])
     #     event = Helpers.get_single_record('em_event', query)
     #     expect(event['type']).not_to be_empty
     #   end
@@ -214,7 +214,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['prod*']) }
 
       it 'sends an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 1, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 1, 2])
         event = Helpers.get_single_record('em_event', query)
         expect(event['type']).not_to be_empty
       end
@@ -224,7 +224,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['prod*'], 'block_list' => ['all']) }
 
       it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
         expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
       end
     end
@@ -233,7 +233,7 @@ describe 'ServiceNow reporting: event management' do
     #   let(:params) { super().merge('allow_list' => ['dev'], 'block_list' => ['production']) }
 
     #   it 'does not send an event' do
-    #     trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+    #     trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
     #     expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
     #   end
     # end
@@ -242,7 +242,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['dev'], 'block_list' => ['*tion', '*od']) }
 
       it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
         expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
       end
     end
@@ -251,7 +251,7 @@ describe 'ServiceNow reporting: event management' do
       let(:params) { super().merge('allow_list' => ['none'], 'block_list' => ['none']) }
 
       it 'does not send an event' do
-        trigger_puppet_run(master, acceptable_exit_codes: [0, 2])
+        trigger_puppet_run(server, acceptable_exit_codes: [0, 2])
         expect { Helpers.get_single_record('em_event', query) }.to raise_error(%r{expected record matching query but none was found})
       end
     end

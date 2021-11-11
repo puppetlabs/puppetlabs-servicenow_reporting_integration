@@ -3,7 +3,7 @@ PuppetLitmus.configure!
 # The Target class and TargetHelpers module are a useful ways
 # for tests to reuse Litmus' helpers when they want to do stuff
 # on nodes that may not be the current target host (like e.g.
-# the master or the ServiceNow instance).
+# the server or the ServiceNow instance).
 #
 # NOTE: The code here is Litmus' recommended approach for multi-node
 # testing (see https://github.com/puppetlabs/puppet_litmus/issues/72).
@@ -43,10 +43,10 @@ end
 class TargetNotFoundError < StandardError; end
 
 module TargetHelpers
-  def master
-    target('master', 'acceptance:provision_vms', 'master')
+  def server
+    target('server', 'acceptance:provision_vms', 'server')
   end
-  module_function :master
+  module_function :server
 
   def servicenow_instance
     target('ServiceNow instance', 'acceptance:setup_servicenow_instance', 'servicenow_instance')
@@ -62,8 +62,7 @@ module TargetHelpers
       targets = LitmusHelpers.find_targets(inventory_hash, nil)
       target_uri = targets.find do |target|
         vars = LitmusHelpers.vars_from_node(inventory_hash, target) || {}
-        roles = vars['roles'] || []
-        roles.include?(role)
+        (vars['role'] || []) == role
       end
       unless target_uri
         raise TargetNotFoundError, "none of the targets in 'inventory.yaml' have the '#{role}' role set. Did you forget to run 'rake #{setup_task}'?"
@@ -127,10 +126,10 @@ module Helpers
   module_function :delete_records
 
   def skip_cert_check?
-    # If the uri for the servicenow instance is just the uri for the master with
+    # If the uri for the servicenow instance is just the uri for the server with
     # the port at the end, then we assume that it's just the container.
     # The container uses a self signed cert, so we have to skip the cert check.
-    servicenow_instance.uri.include? master.uri
+    servicenow_instance.uri.include? server.uri
   end
   module_function :skip_cert_check?
 end
