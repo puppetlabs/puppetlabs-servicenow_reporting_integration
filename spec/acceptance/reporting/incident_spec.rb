@@ -14,11 +14,16 @@ describe 'ServiceNow reporting: incident creation' do
       }.to_json,
     }
 
-    users = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', task_params).result['result']
+    users = Helpers.get_incident_records(task_params)
+
     if users.empty?
       raise "cannot calculate the caller_id: there are no users available on the ServiceNow instance #{servicenow_instance.uri} (table sys_user)"
     end
     users[0].to_json
+  end
+
+  let(:fqdn) do
+    server.run_shell('facter fqdn').stdout.chomp
   end
 
   let(:kaller) { kaller_record }
@@ -27,11 +32,12 @@ describe 'ServiceNow reporting: incident creation' do
 
     {
       instance: servicenow_instance.uri,
-      pe_console_url: "https://#{server.uri}",
+      pe_console_url: "https://#{fqdn}",
       caller_id: kaller['sys_id'],
       user: servicenow_config['user'],
       password: "Sensitive('#{servicenow_config['password']}')",
-      skip_certificate_validation: Helpers.skip_cert_check?,
+      skip_certificate_validation: true,
+      pe_console_cert_validation: 'none',
     }
   end
   let(:setup_manifest) do
@@ -144,7 +150,9 @@ describe 'ServiceNow reporting: incident creation' do
           'sysparm_exclude_reference_link' => true,
         }.to_json,
       }
-      pairs = servicenow_instance.run_bolt_task('servicenow_tasks::get_records', task_params).result['result']
+
+      pairs = Helpers.get_incident_records(task_params)
+
       if pairs.empty?
         raise "cannot calculate the ug_pair: there are no pairs available on the ServiceNow instance #{servicenow_instance.uri} (table sys_user_grmember)"
       end
@@ -227,7 +235,7 @@ describe 'ServiceNow reporting: incident creation' do
     end
 
     # context 'when allow_list matches environment' do
-    #   let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['production']) }
+    #  let(:params) { super().merge('incident_creation_conditions' => ['always'], 'allow_list' => ['production']) }
 
     #   include_examples 'ictc', report_label: 'failures'
     #   include_examples 'ictc', report_label: 'corrective_changes'

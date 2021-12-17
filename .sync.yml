@@ -30,6 +30,9 @@ Gemfile:
 .travis.yml:
   delete: true
 
+Jenkinsfile:
+  delete: true
+
 Rakefile:
   requires:
   use_litmus_tasks: true

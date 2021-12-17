@@ -1,4 +1,12 @@
 RSpec.shared_examples 'incident creation test' do |report_status, resource_hash|
+  let(:fqdn) do
+    server.run_shell('facter fqdn').stdout.chomp
+  end
+
+  let(:fqdn_regex) do
+    Regexp.new(Regexp.escape(fqdn))
+  end
+
   it 'creates an incident' do
     puppet_exit_codes, expected_short_description = case report_status.to_s
                                                     when 'pending'
@@ -16,7 +24,7 @@ RSpec.shared_examples 'incident creation test' do |report_status, resource_hash|
     trigger_puppet_run(server, acceptable_exit_codes: puppet_exit_codes)
     incident = Helpers.get_single_record('incident', query)
     expect(incident['short_description']).to match(expected_short_description)
-    expect(incident['description']).to match(Regexp.new(Regexp.escape(server.uri)))
+    expect(incident['description']).to match(fqdn_regex)
     expect(incident['caller_id']).to eql(kaller['sys_id'])
 
     unless expected_short_description == %r{unchanged}

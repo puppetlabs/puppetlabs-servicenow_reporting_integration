@@ -62,7 +62,7 @@ class servicenow_reporting_integration (
   if ($pe_console_url == undef) {
     # In a monolithic install this value will always be correct. For a multi master
     # or a multiple compile masters scenario, this will most likely point at the
-    # Master of Masters and still be correct. If for some reason it's wrong, the
+    # Master of Masters and still be correct. If for some reason its wrong, the
     # user can still provide their own value for $pe_console_url.
     $final_console_url = "https://${settings::report_server}"
   }
@@ -82,12 +82,14 @@ class servicenow_reporting_integration (
   # The confdir defaults to /etc/puppetlabs/puppet on *nix systems
   # https://puppet.com/docs/puppet/5.5/configuration.html#confdir
   $settings_file_path = "${settings::confdir}/servicenow_reporting.yaml"
-  [$report_processor_changed, $report_processor_version] = servicenow_reporting_integration::check_report_processor($settings_file_path)  if $report_processor_changed {
+  [$report_processor_changed, $report_processor_version] = servicenow_reporting_integration::check_report_processor($settings_file_path)
+  if $report_processor_changed {
     # Restart puppetserver to pick-up the changes
     $settings_file_notify = [Service['pe-puppetserver']]
   } else {
     $settings_file_notify = []
   }
+
   file { $settings_file_path:
     ensure       => file,
     owner        => 'pe-puppet',

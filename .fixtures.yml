@@ -19,3 +19,5 @@ fixtures:
     puppet_agent: 'git://github.com/puppetlabs/puppetlabs-puppet_agent.git'
     provision: "git://github.com/puppetlabs/provision.git"
     servicenow_tasks: 'git://github.com/puppetlabs/servicenow_tasks.git'
+    puppet_conf:
+      repo: 'https://github.com/puppetlabs/puppet_conf.git'

@@ -46,6 +46,7 @@ def default_settings_hash
     'facts_format'                               => 'yaml',
     'include_facts'                              => ['id', 'os.distro', 'ipaddress'],
     'skip_certificate_validation'                => true,
+    'pe_console_cert_validation'                 => 'none',
     'http_read_timeout'                          => 60,
     'http_write_timeout'                         => 60,
     'event_creation_conditions'                  => ['always'],

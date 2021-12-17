@@ -21,11 +21,11 @@ namespace :acceptance do
       # Pass-thru, this means that we haven't set up the server VM
       end
     end
-  
+
     provision_list = ENV['PROVISION_LIST'] || 'acceptance'
     Rake::Task['litmus:provision_list'].invoke(provision_list)
   end
-  
+
   # TODO: This should be refactored to use the https://github.com/puppetlabs/puppetlabs-peadm
   # module for PE setup
   desc 'Sets up PE on the server'
@@ -36,12 +36,9 @@ namespace :acceptance do
 
     config = { 'modulepath' => File.join(Dir.pwd, 'spec', 'fixtures', 'modules') }
 
-    bolt_result = run_plan('servicenow_reporting_integration::acceptance::pe_server', {}, config: config, inventory: inventory_hash.clone)
-    # Setup hiera-eyaml config
-    server.run_shell('rm -rf /etc/eyaml')
-    server.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
+    bolt_result = run_plan('servicenow_reporting_integration::acceptance::pe_server_setup', {}, config: config, inventory: inventory_hash.clone)
   end
-  
+
   desc 'Sets up the ServiceNow instance'
   task :setup_servicenow_instance, [:sn_instance, :sn_user, :sn_password, :sn_token] do |_, args|
     instance, user, password, token = servicenow_params(args)
@@ -50,9 +47,9 @@ namespace :acceptance do
       # then the script will remove the old instance before replacing it with the new
       # one.
       puts("Starting the mock ServiceNow instance at the server (#{server.uri})")
-      server.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
-      server.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
-      instance, user, password, token = "#{server.uri}:1080", 'mock_user', 'mock_password', 'mock_token'
+      server.bolt_upload_file('spec/support/acceptance/servicenow', '/tmp/servicenow')
+      puts server.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh').stdout
+      instance, user, password, token = "#{server.uri}:8000", 'mock_user', 'mock_password', 'mock_token'
     else
       # User provided their own ServiceNow instance so make sure that they've also
       # included the instance's credentials
@@ -61,7 +58,7 @@ namespace :acceptance do
       raise 'The ServiceNow password must be provided' if password.nil?
       puts "oauth token not provided so the oauth token tests will be skipped" if token.nil?
     end
-  
+
     # Update the inventory file
     puts('Updating the inventory.yaml file with the ServiceNow instance credentials')
     inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
@@ -71,7 +68,7 @@ namespace :acceptance do
       inventory_hash['groups'].push(servicenow_group)
     end
     servicenow_group['targets'] = [{
-      'uri' => instance,
+      'uri' => 'localhost:8000',
       'config' => {
         'transport' => 'remote',
         'remote' => {
@@ -81,7 +78,9 @@ namespace :acceptance do
         }
       },
       'facts' => {
-        'platform' => 'servicenow'
+        'platform' => 'servicenow',
+        'provisioner' => 'docker',
+        'container_name' => 'mock_servicenow_instance',
       },
       'vars' => {
         'role' => 'servicenow_instance',
@@ -89,28 +88,28 @@ namespace :acceptance do
     }]
     write_to_inventory_file(inventory_hash, 'spec/fixtures/litmus_inventory.yaml')
   end
-  
+
   desc 'Installs the module on the server'
   task :install_module do
     Rake::Task['litmus:install_module'].invoke(server.uri)
   end
-  
+
   desc 'Reloads puppetserver on the server'
   task :reload_module do
     result = server.run_shell('/opt/puppetlabs/bin/puppetserver reload').stdout.chomp
     puts "Error: #{result}" unless result.nil?
   end
-  
+
   desc 'Gets the puppetserver logs for service now'
   task :get_logs do
     puts server.run_shell('tail -500 /var/log/puppetlabs/puppetserver/puppetserver.log').stdout.chomp
   end
-  
+
   desc 'Do an agent run'
   task :agent_run do
     puts server.run_shell('puppet agent -t').stdout.chomp
   end
-  
+
   desc 'Runs the tests'
   task :run_tests do
     rspec_command  = 'bundle exec rspec ./spec/acceptance --format documentation'
@@ -121,7 +120,7 @@ namespace :acceptance do
       exit 1
     end
   end
-  
+
   desc 'Set up the test infrastructure'
   task :setup do
     tasks = [
@@ -130,7 +129,7 @@ namespace :acceptance do
       :setup_servicenow_instance,
       :install_module,
     ]
-  
+
     tasks.each do |task|
       task = "acceptance:#{task}"
       puts("Invoking #{task}")
@@ -138,14 +137,14 @@ namespace :acceptance do
       puts("")
     end
   end
-  
+
   desc 'Teardown the setup'
   task :tear_down do
     puts("Tearing down the test infrastructure ...\n")
     Rake::Task['litmus:tear_down'].invoke(server.uri)
     FileUtils.rm_f('spec/fixtures/litmus_inventory.yaml')
   end
-  
+
   desc 'Task for CI'
   task :ci_run_tests do
     begin
