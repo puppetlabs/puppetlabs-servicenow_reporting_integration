@@ -1,6 +1,6 @@
 # @summary
-#   This class contains the common setup code for servicenow_reporting_integration::incident_management
-#   and servicenow_reporting_integration::event_management.
+#   This class contains the common setup code for incident_management
+#   and event_management.
 #
 # @api private
 class servicenow_reporting_integration (
