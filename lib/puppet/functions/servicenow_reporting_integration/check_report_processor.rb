@@ -1,7 +1,11 @@
+# This function gets the report processor version and stores it in the settings_file hash
 Puppet::Functions.create_function(:'servicenow_reporting_integration::check_report_processor') do
   require 'json'
   require 'yaml'
-
+  # @param settings_file_path
+  #   The path to the settings file
+  # @return [Array] Returns an array of a boolean value (if the stored ver is same as current ver)
+  #   and  a string value (current version)
   dispatch :check_report_processor do
     param 'String', :settings_file_path
   end
