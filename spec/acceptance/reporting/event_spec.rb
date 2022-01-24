@@ -50,11 +50,11 @@ describe 'ServiceNow reporting: event management' do
     expect(additional_info['id']).to eql('root')
     expect(additional_info['ipaddress']).to match(%r{^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$})
     expect(additional_info['report_labels']).to eql('intentional_changes')
-    expect(additional_info['corrective_changes'].to_json).should_not be_nil
-    expect(additional_info['pending_corrective_changes'].to_json).should_not be_nil
-    expect(additional_info['intentional_changes'].to_json).should_not be_nil
-    expect(additional_info['pending_intentional_changes'].to_json).should_not be_nil
-    expect(additional_info['failures'].to_json).should_not be_nil
+    expect(additional_info['corrective_changes'].to_json).not_to eql(nil)
+    expect(additional_info['pending_corrective_changes'].to_json).not_to eql(nil)
+    expect(additional_info['intentional_changes'].to_json).not_to eql(nil)
+    expect(additional_info['pending_intentional_changes'].to_json).not_to eql(nil)
+    expect(additional_info['failures'].to_json).not_to eql(nil)
   end
 
   it 'handles a catalog failure properly' do
