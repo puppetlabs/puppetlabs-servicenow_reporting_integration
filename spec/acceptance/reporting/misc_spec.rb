@@ -187,18 +187,16 @@ describe 'ServiceNow reporting: miscellaneous tests' do
   end
 
   # Servicenow_instance.uri has been set to localhost:8000 for testing purposes on the cloud.
-  # This is why the Helpers.skip_cert_check? will always return false. So this test will not work.
+  context 'module fails against servicenow container if cert validation on' do
+    let(:params) do
+      super().merge(skip_certificate_validation: false, incident_creation_conditions: ['always'])
+    end
 
-  # context 'module fails against container if cert validation on' do, if: Helpers.skip_cert_check? do
-  #   let(:params) do
-  #     super().merge(skip_certificate_validation: false, incident_creation_conditions: ['always'])
-  #   end
-
-  #   it 'certificate validation fails' do
-  #     server.apply_manifest(setup_manifest, expect_failures: true) do |failure|
-  #       expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
-  #       expect(failure['stderr']).to match(%r{SSL_connect returned=1})
-  #     end
-  #   end
-  # end
+    it 'certificate validation fails' do
+      server.apply_manifest(setup_manifest, expect_failures: true) do |failure|
+        expect(failure['stderr']).to match(%r{failed to validate the ServiceNow credentials})
+        expect(failure['stderr']).to match(%r{SSL_connect returned=1})
+      end
+    end
+  end
 end
